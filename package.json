@@ -1,0 +1,12 @@
+{
+  "name": "@avavilov/apple-script",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Andrey Vavilov <a@vavilov.dev>",
+  "license": "MIT",
+  "description": ""
+}
