@@ -1,12 +1,66 @@
 {
   "name": "@avavilov/apple-script",
   "version": "0.0.1",
-  "main": "dist/index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
+  "description": "Type-safe AppleScript execution library for Node.js with Zod validation",
   "author": "Andrey Vavilov <a@vavilov.dev>",
   "license": "MIT",
-  "description": ""
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "os": [
+    "darwin"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "test": "tsx --test **/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "prebuild": "npm run clean",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "package.json"
+  ],
+  "keywords": [
+    "applescript",
+    "macos",
+    "automation",
+    "typescript",
+    "zod",
+    "validation",
+    "osascript",
+    "apple-events",
+    "browser-automation",
+    "type-safe"
+  ],
+  "dependencies": {
+    "zod": "4.1.4"
+  },
+  "devDependencies": {
+    "@types/node": "24.3.0",
+    "tsx": "4.20.5",
+    "typescript": "5.9.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/harmonyjs/apple-script.git"
+  },
+  "bugs": {
+    "url": "https://github.com/harmonyjs/apple-script/issues"
+  },
+  "homepage": "https://github.com/harmonyjs/apple-script#readme"
 }
