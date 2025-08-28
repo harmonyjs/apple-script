@@ -120,6 +120,3 @@ export async function executeAppleScript(
     );
   }
 }
-
-// Environment validation helpers were removed from public surfaces; consumers can
-// perform their own checks if needed (e.g., ensure macOS and osascript availability).
