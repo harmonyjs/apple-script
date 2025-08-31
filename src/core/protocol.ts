@@ -95,6 +95,14 @@ export function parseRows(payload: string): string[][] {
   const rows = payload.split(RS).filter((row) => row.length > 0);
 
   return rows.map((row) => {
+    // Edge case: if this row ends with a single trailing US and contains no
+    // other US characters, treat it as a single scalar cell to preserve the
+    // trailing control character (e.g., "\x00\x01\x02\x1F"). This avoids
+    // losing the trailing \x1F when splitting and trimming.
+    if (row.endsWith(US) && row.slice(0, -1).indexOf(US) === -1) {
+      return [row];
+    }
+
     const fields = row.split(US);
     // Trim trailing empty fields that may result from separators at end
     while (fields.length > 0 && fields[fields.length - 1] === "") fields.pop();
@@ -186,5 +194,8 @@ export function isErrorResponse(
  * Falls back to the raw message if no known mapping exists.
  */
 export function getErrorMessage(code: number, rawMessage: string): string {
-  return AS_ERROR_MESSAGES[code] ?? rawMessage ?? "Unknown error";
+  const knownMessage = AS_ERROR_MESSAGES[code];
+  if (knownMessage) return knownMessage;
+  if (rawMessage && rawMessage.trim()) return rawMessage;
+  return "Unknown error";
 }
