@@ -85,7 +85,7 @@ export class InvalidActionCodeError extends AppleScriptError {
     public readonly receivedCode: string,
     public readonly operationName: string,
   ) {
-    super(`Invalid action code: ${receivedCode}`, "InvalidActionCodeError");
+    super(`Invalid action code: ${receivedCode} (operation: ${operationName})`, "InvalidActionCodeError");
     this.name = "InvalidActionCodeError";
   }
 }
@@ -200,6 +200,9 @@ export function isTimeoutError(
  */
 export function getUserFriendlyMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  if (error === null) return "null";
+  if (error === undefined) return "undefined";
   try {
     return JSON.stringify(error);
   } catch {
