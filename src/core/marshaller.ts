@@ -147,10 +147,12 @@ export function marshalParam(
         return { varName, literal: "missing value", paramName };
       if (Array.isArray(value))
         return { varName, literal: asListLiteral(value), paramName };
-      // For objects, stringify to JSON string literal
+      // For objects, stringify to JSON and escape for AppleScript
+      const jsonStr = JSON.stringify(value);
+      const escaped = jsonStr.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
       return {
         varName,
-        literal: asStringLiteral(JSON.stringify(value)),
+        literal: `"${escaped}"`,
         paramName,
       };
     }
