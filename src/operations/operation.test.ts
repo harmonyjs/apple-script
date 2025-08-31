@@ -264,7 +264,7 @@ test("operation", async (t) => {
       const op = sections({
         name: "test",
         input: z.object({}),
-        output: z.record(z.array(z.string())),
+  output: z.record(z.string(), z.array(z.string())),
         script: () => 'return {{"section1", {"item1"}}}',
         validateInput: false,
         validateOutput: true,
@@ -278,7 +278,7 @@ test("operation", async (t) => {
       const op = sections({
         name: "categorizeTabsByDomain",
         input: z.object({ domains: z.array(z.string()) }),
-        output: z.record(z.array(z.string())),
+  output: z.record(z.string(), z.array(z.string())),
         script: (vars) => `
           set domainList to ${vars.domains}
           set results to {}
@@ -303,7 +303,7 @@ test("operation", async (t) => {
       const op = sections({
         name: "processWithJS",
         input: z.object({ processor: z.string() }),
-        output: z.record(z.array(z.string())),
+  output: z.record(z.string(), z.array(z.string())),
         script: (vars) => `return do JavaScript ${vars.processor}`,
         hints: { processor: { js: { maxLenKb: 50 } } },
       });
@@ -360,7 +360,7 @@ test("operation", async (t) => {
       const op = operation.sections({
         name: "test",
         input: z.object({}),
-        output: z.record(z.array(z.string())),
+  output: z.record(z.string(), z.array(z.string())),
         script: () => 'return {{"section", {"item"}}}',
       });
 
