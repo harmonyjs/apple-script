@@ -30,7 +30,18 @@
     "test:unit": "tsx --test src/**/*.test.ts",
     "typecheck": "tsc --noEmit",
     "prebuild": "npm run clean",
-    "prepublishOnly": "npm run build"
+    "prepare": "npm run build",
+  "prepublishOnly": "npm run typecheck && npm run build",
+  "preversion": "npm run typecheck",
+    "postversion": "git push && git push --tags",
+    "version:patch": "node ./scripts/version-up.mjs patch",
+    "version:minor": "node ./scripts/version-up.mjs minor",
+    "version:major": "node ./scripts/version-up.mjs major",
+    "version:prerelease": "node ./scripts/version-up.mjs prerelease",
+    "release:patch": "npm version patch && npm publish --access public",
+    "release:minor": "npm version minor && npm publish --access public",
+    "release:major": "npm version major && npm publish --access public",
+    "publish:dry": "npm pack --dry-run"
   },
   "files": [
     "dist",
@@ -50,6 +61,9 @@
     "browser-automation",
     "type-safe"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "zod": ">=4.0.0 <5"
   },
