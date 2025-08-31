@@ -69,8 +69,7 @@ on __join__(listItems, sep)
 		end if
 	end repeat
 	return out
-end __join__
-`;
+end __join__`;
 }
 
 /**
@@ -232,10 +231,32 @@ export function buildAppleScript(options: ScriptBuildOptions): string {
 /**
  * Validates that a user script has proper return statements.
  * This is a simple heuristic check, not a full parser.
+ * Tries to avoid false positives from comments and strings.
  */
 export function hasReturnStatement(script: string): boolean {
-  const s = script.toLowerCase();
-  return s.includes("return ");
+  const lines = script.split('\n');
+  
+  for (const line of lines) {
+    const trimmed = line.trim().toLowerCase();
+    
+    // Skip empty lines and comments
+    if (!trimmed || trimmed.startsWith('--')) continue;
+    
+    // Skip lines with quotes (to avoid strings)
+    if (trimmed.includes('"') || trimmed.includes("'")) continue;
+    
+    // Look for return statement at start of line (after whitespace)
+    if (trimmed.startsWith('return ') || trimmed === 'return') {
+      return true;
+    }
+    
+    // Also check for return after other keywords like "then return"
+    if (/\bthen\s+return\b/.test(trimmed) || /\belse\s+return\b/.test(trimmed)) {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 /**
