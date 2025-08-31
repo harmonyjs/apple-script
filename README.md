@@ -194,6 +194,8 @@ const runner = createAppleRunner({
 });
 ```
 
+Note: The runner serializes operations per appId using an internal QueueManager. Each appId has its own FIFO queue. Queue semantics (microtask scheduling, clear() epoch cut-off, and the length property) apply per appId queue. See: src/queue/README.md.
+
 ## Protocol Details
 
 ### Encoding
@@ -310,6 +312,8 @@ await Promise.all([promise1, promise2, promise3]);
 await runner.drain();
 ```
 
+Tip: For microtask scheduling details, clear() epoch behavior, and the length property semantics, see src/queue/README.md.
+
 ## Error Handling
 
 The library provides detailed error information:
@@ -331,6 +335,12 @@ if (!result.ok) {
   }
 }
 ```
+
+## Internals
+
+For details about internal queueing behavior (microtask scheduling, clear() epoch cut-off, length semantics), see:
+
+- src/queue/README.md
 
 ## Architecture
 

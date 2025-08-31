@@ -26,6 +26,9 @@ export interface QueueTask<T = unknown> {
   /** Timestamp when task was enqueued */
   enqueuedAt: number;
 
+  /** Queue clear epoch when task was enqueued */
+  epoch: number;
+
   /** Optional metadata about the task */
   metadata?: Record<string, any>;
 }
@@ -55,11 +58,29 @@ export interface QueueStats {
 
 /**
  * FIFO queue for serializing async operations.
+ *
+ * Behavior highlights:
+ * - Tasks are executed strictly in FIFO order, one at a time.
+ * - Task processing is deferred to a microtask after add(), so consumers can
+ *   synchronously call clear() immediately after add() without a race where
+ *   the task starts first.
+ * - clear() increments an internal epoch and rejects any pending tasks that
+ *   were enqueued prior to the clear, even if they were already dequeued for
+ *   execution but haven't started running yet.
+ * - The `length` getter reflects the number of pending tasks and intentionally
+ *   excludes a task whose processing has been scheduled but not started yet.
+ *   This aligns with the user-facing notion of "pending" work.
  */
 export class Queue {
   private tasks: QueueTask<any>[] = [];
   private isProcessing = false;
   private nextTaskId = 1;
+  /** Whether a processing microtask has been scheduled but not started yet */
+  private processingScheduled = false;
+  /** Monotonic counter incremented on each clear to mark cut-off for pending tasks */
+  private clearEpoch = 0;
+  /** Error used for the last clear() invocation */
+  private lastClearError: Error | null = null;
 
   // Statistics
   private stats = {
@@ -89,10 +110,19 @@ export class Queue {
         resolve: resolve as any,
         reject,
         enqueuedAt: Date.now(),
+        epoch: this.clearEpoch,
         metadata,
       };
       this.tasks.push(task);
-      void this.process();
+      // Defer processing to the microtask queue so callers can synchronously
+      // call clear() right after add() without races where the task starts first.
+      if (!this.isProcessing && !this.processingScheduled) {
+        this.processingScheduled = true;
+        queueMicrotask(() => {
+          this.processingScheduled = false;
+          void this.process();
+        });
+      }
     });
   }
 
@@ -110,6 +140,12 @@ export class Queue {
       const start = Date.now();
       const wait = start - task.enqueuedAt;
       try {
+        // If the task was enqueued before the most recent clear(), reject it instead of executing
+        if (task.epoch < this.clearEpoch) {
+          const err = this.lastClearError ?? new Error("Queue cleared");
+          task.reject(err);
+          continue;
+        }
         const result = await task.execute();
         const execTime = Date.now() - start;
         this.stats.totalProcessed += 1;
@@ -124,9 +160,22 @@ export class Queue {
     this.isProcessing = false;
   }
 
-  /** Gets the current queue length. */
+  /**
+   * Gets the current queue length.
+   *
+   * Semantics: returns the number of pending tasks waiting to run and excludes
+   * a task whose processing is scheduled (via microtask) but not started yet.
+   * This matches the typical expectation that the in-flight (or imminently
+   * in-flight) task is not counted as "pending".
+   *
+   * Note: `getStats().currentLength` reports the raw internal queue size
+   * without this adjustment.
+   */
   get length(): number {
-    return this.tasks.length;
+    // If processing is scheduled but not started, one task will imminently be
+    // taken for execution; for user-facing semantics this matches the previous
+    // eager-processing behavior where length excluded the in-flight task.
+    return Math.max(0, this.tasks.length - (this.processingScheduled ? 1 : 0));
   }
 
   /** Checks if the queue is currently processing a task. */
@@ -149,10 +198,17 @@ export class Queue {
 
   /**
    * Clears all pending tasks from the queue.
-   * Does not affect the currently executing task.
+   *
+   * - Rejects all tasks that are still enqueued.
+   * - Also marks an internal epoch so that any task dequeued concurrently but
+   *   not yet executed is rejected with the provided error instead of running.
+   * - Does not interrupt the currently executing task.
    */
   clear(rejectWith?: Error): void {
     const err = rejectWith ?? new Error("Queue cleared");
+    // Advance the epoch so any task popped concurrently but not yet executed is rejected
+    this.clearEpoch += 1;
+    this.lastClearError = err;
     while (this.tasks.length > 0) {
       const t = this.tasks.shift()!;
       t.reject(err);
