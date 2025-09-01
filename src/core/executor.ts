@@ -18,16 +18,24 @@ const execFileAsync = promisify(execFile);
  * Options for executing AppleScript
  */
 export interface ExecuteOptions {
-  /** Timeout in milliseconds for the Node.js process */
+  /**
+   * Timeout in milliseconds for the Node.js process
+   */
   timeoutMs?: number;
 
-  /** Working directory for the process */
+  /**
+   * Working directory for the process
+   */
   cwd?: string;
 
-  /** Environment variables */
+  /**
+   * Environment variables
+   */
   env?: NodeJS.ProcessEnv;
 
-  /** Maximum buffer size for stdout/stderr in bytes */
+  /**
+   * Maximum buffer size for stdout/stderr in bytes
+   */
   maxBuffer?: number;
 }
 
@@ -35,7 +43,9 @@ export interface ExecuteOptions {
  * Result from AppleScript execution
  */
 export interface ExecuteResult extends RawResponse {
-  /** Execution time in milliseconds */
+  /**
+   * Execution time in milliseconds
+   */
   durationMs: number;
 }
 
