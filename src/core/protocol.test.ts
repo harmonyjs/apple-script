@@ -1,6 +1,6 @@
 /**
  * @fileoverview Unit tests for protocol module.
- * 
+ *
  * Tests the parsing of AppleScript responses according to the protocol format,
  * including all payload types and error handling.
  */
@@ -389,44 +389,29 @@ test("protocol", async (t) => {
     });
 
     await t.test("throws on invalid action code", () => {
-      assert.throws(
-        () => parseAction("3"),
-        /Invalid action code/
-      );
+      assert.throws(() => parseAction("3"), /Invalid action code/);
     });
 
     await t.test("throws on empty action code", () => {
-      assert.throws(
-        () => parseAction(""),
-        /Invalid action code/
-      );
+      assert.throws(() => parseAction(""), /Invalid action code/);
     });
 
     await t.test("throws on null action code", () => {
-      assert.throws(
-        () => parseAction(null as any),
-        /Invalid action code/
-      );
+      assert.throws(() => parseAction(null as any), /Invalid action code/);
     });
 
     await t.test("throws on undefined action code", () => {
-      assert.throws(
-        () => parseAction(undefined as any),
-        /Invalid action code/
-      );
+      assert.throws(() => parseAction(undefined as any), /Invalid action code/);
     });
 
     await t.test("throws on non-numeric action code", () => {
-      assert.throws(
-        () => parseAction("invalid"),
-        /Invalid action code/
-      );
+      assert.throws(() => parseAction("invalid"), /Invalid action code/);
     });
 
     await t.test("includes operation name in error context", () => {
       assert.throws(
         () => parseAction("invalid", { opName: "testOperation" }),
-        /Invalid action code.*testOperation/
+        /Invalid action code.*testOperation/,
       );
     });
   });
@@ -435,7 +420,7 @@ test("protocol", async (t) => {
     await t.test("isSuccessResponse", () => {
       const success = { ok: true as const, payload: "test" };
       const error = { ok: false as const, code: -1, message: "error" };
-      
+
       assert.equal(isSuccessResponse(success), true);
       assert.equal(isSuccessResponse(error), false);
     });
@@ -443,7 +428,7 @@ test("protocol", async (t) => {
     await t.test("isErrorResponse", () => {
       const success = { ok: true as const, payload: "test" };
       const error = { ok: false as const, code: -1, message: "error" };
-      
+
       assert.equal(isErrorResponse(success), false);
       assert.equal(isErrorResponse(error), true);
     });
@@ -451,7 +436,10 @@ test("protocol", async (t) => {
 
   await t.test("getErrorMessage", async (t) => {
     await t.test("returns known error message", () => {
-      const message = getErrorMessage(AS_ERROR_CODES.TIMEOUT_APPLE_EVENT, "raw message");
+      const message = getErrorMessage(
+        AS_ERROR_CODES.TIMEOUT_APPLE_EVENT,
+        "raw message",
+      );
       assert.equal(message, "AppleScript timed out waiting for Apple Event");
     });
 
@@ -470,10 +458,13 @@ test("protocol", async (t) => {
       assert.equal(message, "Unknown error");
     });
 
-    await t.test("returns fallback for unknown code with undefined message", () => {
-      const message = getErrorMessage(-9999, undefined as any);
-      assert.equal(message, "Unknown error");
-    });
+    await t.test(
+      "returns fallback for unknown code with undefined message",
+      () => {
+        const message = getErrorMessage(-9999, undefined as any);
+        assert.equal(message, "Unknown error");
+      },
+    );
 
     await t.test("handles all known error codes", () => {
       const codes = [
@@ -523,12 +514,12 @@ test("protocol", async (t) => {
 
     await t.test("handles Unicode in all parsers", () => {
       const unicode = "Hello 世界 🌍";
-      
+
       assert.equal(parseScalar(unicode), unicode);
-      
+
       const rowsResult = parseRows(unicode);
       assert.deepEqual(rowsResult, [[unicode]]);
-      
+
       const sectionsPayload = `section${US}${unicode}`;
       const sectionsResult = parseSections(sectionsPayload);
       assert.deepEqual(sectionsResult, { section: [unicode] });
@@ -536,9 +527,9 @@ test("protocol", async (t) => {
 
     await t.test("handles control characters in payloads", () => {
       const controlChars = "\x00\x01\x02\x1F";
-      
+
       assert.equal(parseScalar(controlChars), controlChars);
-      
+
       const rowsResult = parseRows(controlChars);
       assert.deepEqual(rowsResult, [[controlChars]]);
     });

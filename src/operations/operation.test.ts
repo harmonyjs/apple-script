@@ -1,19 +1,13 @@
 /**
  * @fileoverview Unit tests for operation module.
- * 
+ *
  * Tests the factory functions for creating different types of AppleScript operations,
  * including validation and type safety.
  */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { z } from "zod";
-import {
-  scalar,
-  action,
-  rows,
-  sections,
-  operation,
-} from "./operation.js";
+import { scalar, action, rows, sections, operation } from "./operation.js";
 
 test("operation", async (t) => {
   await t.test("scalar operations", async (t) => {
@@ -21,7 +15,10 @@ test("operation", async (t) => {
       const op = scalar({
         name: "getTabCount",
         input: z.object({ windowId: z.number() }),
-        output: z.string().transform(s => parseInt(s, 10)).pipe(z.number()),
+        output: z
+          .string()
+          .transform((s) => parseInt(s, 10))
+          .pipe(z.number()),
         script: (vars) => `return count of tabs of window ${vars.windowId}`,
       });
 
@@ -71,8 +68,14 @@ test("operation", async (t) => {
         },
       });
 
-      const script = op.def.script({ url: "__ARG__url", count: "__ARG__count" });
-      assert.equal(script, "open location __ARG__url repeat __ARG__count times");
+      const script = op.def.script({
+        url: "__ARG__url",
+        count: "__ARG__count",
+      });
+      assert.equal(
+        script,
+        "open location __ARG__url repeat __ARG__count times",
+      );
     });
 
     await t.test("handles empty input schema", () => {
@@ -80,7 +83,7 @@ test("operation", async (t) => {
         name: "getCurrentTab",
         input: z.object({}),
         output: z.string(),
-        script: () => 'return name of current tab',
+        script: () => "return name of current tab",
       });
 
       assert.equal(op.def.kind, "scalar");
@@ -114,7 +117,7 @@ test("operation", async (t) => {
       // Output should be the action enum
       const testResult = op.def.output.safeParse("1");
       assert.equal(testResult.success, true);
-      
+
       const invalidResult = op.def.output.safeParse("3");
       assert.equal(invalidResult.success, false);
     });
@@ -158,10 +161,12 @@ test("operation", async (t) => {
       const op = rows({
         name: "getAllTabs",
         input: z.object({}),
-        output: z.array(z.object({
-          name: z.string(),
-          url: z.string(),
-        })),
+        output: z.array(
+          z.object({
+            name: z.string(),
+            url: z.string(),
+          }),
+        ),
         script: () => `
           set tabList to {}
           repeat with t in tabs of window 1
@@ -264,7 +269,7 @@ test("operation", async (t) => {
       const op = sections({
         name: "test",
         input: z.object({}),
-  output: z.record(z.string(), z.array(z.string())),
+        output: z.record(z.string(), z.array(z.string())),
         script: () => 'return {{"section1", {"item1"}}}',
         validateInput: false,
         validateOutput: true,
@@ -278,7 +283,7 @@ test("operation", async (t) => {
       const op = sections({
         name: "categorizeTabsByDomain",
         input: z.object({ domains: z.array(z.string()) }),
-  output: z.record(z.string(), z.array(z.string())),
+        output: z.record(z.string(), z.array(z.string())),
         script: (vars) => `
           set domainList to ${vars.domains}
           set results to {}
@@ -303,7 +308,7 @@ test("operation", async (t) => {
       const op = sections({
         name: "processWithJS",
         input: z.object({ processor: z.string() }),
-  output: z.record(z.string(), z.array(z.string())),
+        output: z.record(z.string(), z.array(z.string())),
         script: (vars) => `return do JavaScript ${vars.processor}`,
         hints: { processor: { js: { maxLenKb: 50 } } },
       });
@@ -360,7 +365,7 @@ test("operation", async (t) => {
       const op = operation.sections({
         name: "test",
         input: z.object({}),
-  output: z.record(z.string(), z.array(z.string())),
+        output: z.record(z.string(), z.array(z.string())),
         script: () => 'return {{"section", {"item"}}}',
       });
 
@@ -426,7 +431,10 @@ test("operation", async (t) => {
         enabled: "__ARG__enabled",
       });
 
-      assert.equal(result, "process __ARG__url __ARG__count times, enabled: __ARG__enabled");
+      assert.equal(
+        result,
+        "process __ARG__url __ARG__count times, enabled: __ARG__enabled",
+      );
     });
 
     await t.test("operations preserve schema types", () => {
@@ -435,16 +443,19 @@ test("operation", async (t) => {
         filter: z.string().optional(),
       });
 
-      const OutputSchema = z.array(z.object({
-        id: z.number(),
-        title: z.string(),
-      }));
+      const OutputSchema = z.array(
+        z.object({
+          id: z.number(),
+          title: z.string(),
+        }),
+      );
 
       const op = rows({
         name: "getFilteredTabs",
         input: InputSchema,
         output: OutputSchema,
-        script: (vars) => `get tabs from window ${vars.windowId} where ${vars.filter}`,
+        script: (vars) =>
+          `get tabs from window ${vars.windowId} where ${vars.filter}`,
       });
 
       // The schemas should be preserved
@@ -501,7 +512,10 @@ test("operation", async (t) => {
         param123: "__ARG__param123",
       });
 
-      assert.equal(result, "__ARG__param_with_dashes __ARG__param_with_underscores __ARG__param123");
+      assert.equal(
+        result,
+        "__ARG__param_with_dashes __ARG__param_with_underscores __ARG__param123",
+      );
     });
 
     await t.test("handles multiline scripts", () => {
