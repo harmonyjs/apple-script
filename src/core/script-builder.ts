@@ -25,22 +25,34 @@ import { generatePrologue } from "./marshaller";
  * Options for building an AppleScript
  */
 export interface ScriptBuildOptions {
-  /** Application bundle ID to target */
+  /**
+   * Application bundle ID to target
+   */
   appId: string;
 
-  /** Payload encoding mode */
+  /**
+   * Payload encoding mode
+   */
   kind: PayloadKind;
 
-  /** User script body (uses ${varName} for parameters) */
+  /**
+   * User script body (uses ${varName} for parameters)
+   */
   userScript: string;
 
-  /** Marshalled parameters */
+  /**
+   * Marshalled parameters
+   */
   params: MarshalledParam[];
 
-  /** AppleScript timeout in seconds */
+  /**
+   * AppleScript timeout in seconds
+   */
   timeoutSec?: number;
 
-  /** Whether to ensure app is ready before execution */
+  /**
+   * Whether to ensure app is ready before execution
+   */
   ensureReady?: boolean;
 }
 
@@ -234,28 +246,31 @@ export function buildAppleScript(options: ScriptBuildOptions): string {
  * Tries to avoid false positives from comments and strings.
  */
 export function hasReturnStatement(script: string): boolean {
-  const lines = script.split('\n');
-  
+  const lines = script.split("\n");
+
   for (const line of lines) {
     const trimmed = line.trim().toLowerCase();
-    
+
     // Skip empty lines and comments
-    if (!trimmed || trimmed.startsWith('--')) continue;
-    
+    if (!trimmed || trimmed.startsWith("--")) continue;
+
     // Skip lines with quotes (to avoid strings)
     if (trimmed.includes('"') || trimmed.includes("'")) continue;
-    
+
     // Look for return statement at start of line (after whitespace)
-    if (trimmed.startsWith('return ') || trimmed === 'return') {
+    if (trimmed.startsWith("return ") || trimmed === "return") {
       return true;
     }
-    
+
     // Also check for return after other keywords like "then return"
-    if (/\bthen\s+return\b/.test(trimmed) || /\belse\s+return\b/.test(trimmed)) {
+    if (
+      /\bthen\s+return\b/.test(trimmed) ||
+      /\belse\s+return\b/.test(trimmed)
+    ) {
       return true;
     }
   }
-  
+
   return false;
 }
 
