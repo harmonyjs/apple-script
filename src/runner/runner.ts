@@ -1,5 +1,21 @@
 /**
  * @fileoverview Main AppleRunner class implementation.
+ *
+ * @remarks
+ * Lifecycle:
+ * 1) Input validation (optional, zod)
+ * 2) Marshalling input to AppleScript literals
+ * 3) AppleScript template assembly and execution
+ * 4) Protocol parse (OK/ERR with GS/RS/US)
+ * 5) Output parse and validation (optional)
+ * 6) Retries (configurable)
+ * 7) Hooks (debug/onResult/onError)
+ *
+ * Timeout precedence:
+ * - RunOptions.timeoutSec > RunnerConfig.timeoutByKind[kind] > RunnerConfig.defaultTimeoutSec > DEFAULT_TIMEOUTS.APPLESCRIPT_SEC
+ * - RunOptions.controllerTimeoutMs > RunnerConfig.defaultControllerTimeoutMs > DEFAULT_TIMEOUTS.CONTROLLER_MS
+ *
+ * See also: {@link isSuccess}, {@link getResultData}, {@link unwrapResult}.
  */
 import { z } from "zod";
 import { DEFAULT_TIMEOUTS, PayloadKind } from "../core/constants";
@@ -19,7 +35,6 @@ import type {
   Operation,
   OperationDef,
   OperationError,
-  OperationResult,
   RunOptions,
 } from "../operations/types";
 import {
@@ -40,6 +55,10 @@ import {
   ScriptError,
 } from "../errors";
 
+/**
+ * Executes operations against a target macOS application with validation, timeouts, retries, and hooks.
+ * @public
+ */
 export class AppleRunner {
   private readonly config: Required<
     Omit<RunnerConfig, "debug" | "onResult" | "onError">
@@ -93,6 +112,15 @@ export class AppleRunner {
     this.queueManager = new QueueManager();
   }
 
+  /**
+   * Runs a typed operation against the configured application.
+   *
+   * Contract:
+   * - Inputs: an {@link Operation} and its input shape ({@link z.infer} from the operation's input schema);
+   *   optional {@link RunOptions} for timeouts/validation overrides.
+   * - Output: a {@link RunResult} with either parsed & validated data or a normalized error.
+   * - Retries: by default only timeout errors are retried when `maxRetries > 0`; other errors are not retried.
+   */
   async run<TInput extends z.ZodType, TOutput extends z.ZodType>(
     operation: Operation<TInput, TOutput>,
     input: z.infer<TInput>,
@@ -147,7 +175,7 @@ export class AppleRunner {
     input: z.infer<TInput>,
     options?: RunOptions,
     retryCount: number = 0,
-  ): Promise<OperationResult<z.infer<TOutput>>> {
+  ): Promise<RunResult<z.infer<TOutput>>> {
     const validateInput = options?.skipInputValidation
       ? false
       : (def.validateInput ?? this.config.validateByDefault);
@@ -226,6 +254,7 @@ export class AppleRunner {
 
         if (validateOutput) {
           // Special handling for rows: if schema is array(object), map columns to object keys
+          // Mapping rules: extra columns are ignored; missing keys become undefined and will be validated by the schema.
           if (isRowsOperation(def)) {
             const outSchema: any = def.output;
             const elem =
@@ -328,8 +357,12 @@ export class AppleRunner {
   }
 
   private isRetriableError(_error: OperationError): boolean {
-    // Basic: do not retry by default; extend for timeouts/transient
-    return false;
+    // Retry on timeouts; other errors are considered non-retriable by default
+    const c = _error.cause as any;
+    return (
+      c?.name === "TimeoutAppleEventError" ||
+      c?.name === "TimeoutOSAScriptError"
+    );
   }
 
   getStats(): RunnerStats {
@@ -343,6 +376,10 @@ export class AppleRunner {
   }
 }
 
+/**
+ * Creates an AppleRunner for the given app id and configuration.
+ * @public
+ */
 export function createAppleRunner(config: RunnerConfig): AppleRunner {
   return new AppleRunner(config);
 }
