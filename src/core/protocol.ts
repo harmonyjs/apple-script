@@ -22,13 +22,19 @@ import { InvalidActionCodeError } from "../errors";
  * Raw response from AppleScript execution
  */
 export interface RawResponse {
-  /** Standard output from osascript */
+  /**
+   * Standard output from osascript
+   */
   stdout: string;
 
-  /** Standard error from osascript */
+  /**
+   * Standard error from osascript
+   */
   stderr: string;
 
-  /** Exit code from process */
+  /**
+   * Exit code from process
+   */
   exitCode: number | null;
 }
 
@@ -160,6 +166,10 @@ export function parseAction(
   payload: string,
   ctx?: { opName?: string },
 ): ActionCode {
+  /**
+   * @remarks
+   * Valid codes are declared in {@link ACTION_CODES}. Unknown values raise {@link InvalidActionCodeError}.
+   */
   const code = payload?.trim();
   if (
     code === ACTION_CODES.FAILURE ||
