@@ -4,3 +4,11 @@ node_modules/
 # Ignore build output
 dist/
 
+
+# API Extractor temp artifacts
+.tmp/
+temp/
+
+# macOS
+.DS_Store
+

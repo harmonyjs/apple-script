@@ -9,10 +9,7 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
+    ".": "./dist/index.js",
     "./package.json": "./package.json"
   },
   "engines": {
@@ -22,26 +19,29 @@
     "darwin"
   ],
   "scripts": {
-    "clean": "rm -rf dist",
-    "build": "tsc",
+  "build": "tsc && api-extractor run --local && rm -rf ./.tmp",
+  "clean": "rm -rf dist .tmp temp",
     "dev": "tsx watch src/index.ts",
-    "test": "npm run test:unit && npm run test:integration",
-    "test:integration": "tsx --test tests/**/*.test.ts",
-    "test:unit": "tsx --test src/**/*.test.ts",
-    "typecheck": "tsc --noEmit",
+  "docs:build": "api-extractor run --local && api-documenter markdown -i ./.tmp -o ./docs/api && rm -rf ./.tmp",
+  "docs:extract": "api-extractor run --local && rm -rf ./.tmp",
+    "docs:preview": "open ./docs/api/index.md || true",
+    "postversion": "git push && git push --tags",
     "prebuild": "npm run clean",
     "prepare": "npm run build",
     "prepublishOnly": "npm run typecheck && npm run build",
     "preversion": "npm run typecheck",
-    "postversion": "git push && git push --tags",
-    "version:patch": "node ./scripts/version-up.mjs patch",
-    "version:minor": "node ./scripts/version-up.mjs minor",
-    "version:major": "node ./scripts/version-up.mjs major",
-    "version:prerelease": "node ./scripts/version-up.mjs prerelease",
-    "release:patch": "npm version patch && npm publish --access public",
-    "release:minor": "npm version minor && npm publish --access public",
+    "publish:dry": "npm pack --dry-run",
     "release:major": "npm version major && npm publish --access public",
-    "publish:dry": "npm pack --dry-run"
+    "release:minor": "npm version minor && npm publish --access public",
+    "release:patch": "npm version patch && npm publish --access public",
+    "test:integration": "tsx --test tests/**/*.test.ts",
+    "test:unit": "tsx --test src/**/*.test.ts",
+    "test": "npm run test:unit && npm run test:integration",
+    "typecheck": "tsc --noEmit",
+    "version:major": "node ./scripts/version-up.mjs major",
+    "version:minor": "node ./scripts/version-up.mjs minor",
+    "version:patch": "node ./scripts/version-up.mjs patch",
+    "version:prerelease": "node ./scripts/version-up.mjs prerelease"
   },
   "files": [
     "dist",
@@ -67,13 +67,14 @@
   "peerDependencies": {
     "zod": ">=4.0.0 <5"
   },
-  "dependencies": {
-    "zod": "4.1.5"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "24.3.0",
+    "@microsoft/api-extractor": "7.52.11",
+    "@microsoft/api-documenter": "7.26.32",
     "tsx": "4.20.5",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "zod": "4.1.5"
   },
   "repository": {
     "type": "git",
@@ -82,5 +83,12 @@
   "bugs": {
     "url": "https://github.com/harmonyjs/apple-script/issues"
   },
-  "homepage": "https://github.com/harmonyjs/apple-script#readme"
+  "homepage": "https://github.com/harmonyjs/apple-script#readme",
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/index.d.ts"
+      ]
+    }
+  }
 }
