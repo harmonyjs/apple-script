@@ -8,7 +8,7 @@ Type-safe AppleScript execution library for Node.js with Zod validation. Execute
 - ✅ **Validation**: Input/output validation using Zod schemas
 - 🎯 **Declarative API**: Define operations once, use everywhere
 - 🔄 **Queue Management**: Automatic serialization of operations per application
-- ⚡ **Protocol Standardization**: Consistent encoding/decoding with control characters
+- ⚡ **Protocol Standardization**: Consistent encoding/decoding with control characters (see the [Protocol](docs/protocol.md))
 - 🛡️ **Security**: Safe parameter marshalling prevents injection attacks
 - 📊 **Observable**: Debug hooks, result callbacks, and error handlers
 - ⏱️ **Timeout Control**: Dual timeout system (AppleScript + Node.js)
@@ -79,7 +79,7 @@ const openURL = operation.action({
 ### Operation Types
 
 #### 1. Scalar Operations
-Return a single string value:
+Return a single string value (see [Protocol: scalar](docs/protocol.md#scalar)):
 
 ```typescript
 const getTitle = operation.scalar({
@@ -93,7 +93,7 @@ const getTitle = operation.scalar({
 ```
 
 #### 2. Action Operations
-Return status codes (0=failure, 1=success, 2=partial):
+Return status codes (0=failure, 1=success, 2=partial) (see [Protocol: action](docs/protocol.md#action)):
 
 ```typescript
 const closeTab = operation.action({
@@ -118,7 +118,7 @@ const closeTab = operation.action({
 ```
 
 #### 3. Rows Operations
-Return tabular data as array of objects:
+Return tabular data as array of objects (encoded with RS/US separators; see [Protocol: rows](docs/protocol.md#rows)):
 
 ```typescript
 const listTabs = operation.rows({
@@ -142,7 +142,7 @@ const listTabs = operation.rows({
 ```
 
 #### 4. Sections Operations
-Return grouped data with named sections:
+Return grouped data with named sections (see [Protocol: sections](docs/protocol.md#sections)):
 
 ```typescript
 const closeTabs = operation.sections({
@@ -197,6 +197,7 @@ const runner = createAppleRunner({
 Note: The runner serializes operations per appId using an internal QueueManager. Each appId has its own FIFO queue. Queue semantics (microtask scheduling, clear() epoch cut-off, and the length property) apply per appId queue. See: src/queue/README.md.
 
 ## Protocol Details
+For the complete protocol specification and additional examples, see [docs/protocol.md](docs/protocol.md).
 
 ### Encoding
 
@@ -349,7 +350,7 @@ The library follows a layered architecture:
 1. **User API Layer**: High-level functions (`createAppleRunner`, `operation.*`)
 2. **Runner Layer**: Orchestration, retries, hooks
 3. **Operations & Queue Layer**: Operation definitions, queue management, validation
-4. **Core Layer**: Script building, marshalling, protocol parsing
+4. **Core Layer**: Script building, marshalling, [protocol](docs/protocol.md) parsing
 5. **System Layer**: `osascript` execution via `child_process`
 
 ## License
