@@ -12,10 +12,25 @@
 import { MAX_SIZES } from "./constants";
 
 /**
- * Parameter hint for special handling of certain parameter types
+ * Parameter hint for special handling of certain parameter types.
+ *
+ * @remarks
+ * Hints are provided per input key via `options.hints`. They affect marshalling only and
+ * do not change validation. Typical usage is to mark a field as JavaScript code with
+ * a custom size limit.
+ *
+ * @example
+ * ```ts
+ * const hints = { code: { js: { maxLenKb: 256 } } };
+ * // input: { code: string }
+ * ```
+ *
+ * @public
  */
 export interface ParamHint {
-  /** Indicates this parameter contains JavaScript code */
+  /**
+   * Indicates this parameter contains JavaScript code
+   */
   js?: {
     // Optional override for maximum KB
     maxLenKb?: number;
@@ -23,16 +38,28 @@ export interface ParamHint {
 }
 
 /**
- * Marshalled parameter ready for AppleScript
+ * Marshalled parameter ready for AppleScript.
+ *
+ * @remarks
+ * The library assigns a unique `varName` (e.g. `__ARG__url`) and a safe AppleScript literal
+ * string for the value. Large strings and arrays are limited; see {@link MAX_SIZES}.
+ *
+ * @public
  */
 export interface MarshalledParam {
-  /** Variable name in AppleScript (e.g., "__ARG__url") */
+  /**
+   * Variable name in AppleScript (e.g., "__ARG__url")
+   */
   varName: string;
 
-  /** AppleScript literal value (e.g., '"https://example.com"') */
+  /**
+   * AppleScript literal value (e.g., '"https://example.com"')
+   */
   literal: string;
 
-  /** Original parameter name */
+  /**
+   * Original parameter name
+   */
   paramName: string;
 }
 
@@ -46,6 +73,8 @@ export interface MarshalledParam {
  * @example
  * asStringLiteral('Hello "World"')
  * // Returns: '"Hello " & quote & "World" & quote & ""'
+ *
+ * @public
  */
 export function asStringLiteral(str: string): string {
   // Empty string
@@ -79,6 +108,8 @@ export function asStringLiteral(str: string): string {
  * @example
  * asListLiteral(['a', 'b', 'c']) // Returns: '{"a", "b", "c"}'
  * asListLiteral([1, 2, 3])        // Returns: '{1, 2, 3}'
+ *
+ * @public
  */
 export function asListLiteral(arr: unknown[]): string {
   if (!Array.isArray(arr)) throw new Error("Expected an array");
@@ -97,6 +128,8 @@ export function asListLiteral(arr: unknown[]): string {
 /**
  * Validates JavaScript code parameter.
  * Ensures it's a string and within size limits.
+ *
+ * @public
  */
 export function validateJsCode(
   code: string,
@@ -117,6 +150,8 @@ export function validateJsCode(
  * @param value - JavaScript value to marshal
  * @param hint - Optional hint for special handling
  * @returns Marshalled parameter with variable name and literal
+ *
+ * @public
  */
 export function marshalParam(
   paramName: string,
@@ -169,6 +204,8 @@ export function marshalParam(
  * @param params - Object with parameter values
  * @param hints - Optional hints for special parameter handling
  * @returns Array of marshalled parameters
+ *
+ * @public
  */
 export function marshalParams(
   params: Record<string, unknown>,
@@ -182,6 +219,8 @@ export function marshalParams(
 /**
  * Generates AppleScript variable declarations from marshalled parameters.
  * These declarations go in the script prologue.
+ *
+ * @public
  */
 export function generatePrologue(params: MarshalledParam[]): string {
   if (!params.length) return "";
