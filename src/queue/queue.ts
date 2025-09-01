@@ -11,25 +11,39 @@
  * Task to be executed in the queue
  */
 export interface QueueTask<T = unknown> {
-  /** Unique identifier for the task */
+  /**
+   * Unique identifier for the task
+   */
   id: string;
 
-  /** Function that performs the actual work */
+  /**
+   * Function that performs the actual work
+   */
   execute: () => Promise<T>;
 
-  /** Promise resolver for the task result */
+  /**
+   * Promise resolver for the task result
+   */
   resolve: (value: T) => void;
 
-  /** Promise rejector for task errors */
+  /**
+   * Promise rejector for task errors
+   */
   reject: (error: any) => void;
 
-  /** Timestamp when task was enqueued */
+  /**
+   * Timestamp when task was enqueued
+   */
   enqueuedAt: number;
 
-  /** Queue clear epoch when task was enqueued */
+  /**
+   * Queue clear epoch when task was enqueued
+   */
   epoch: number;
 
-  /** Optional metadata about the task */
+  /**
+   * Optional metadata about the task
+   */
   metadata?: Record<string, any>;
 }
 
@@ -37,22 +51,34 @@ export interface QueueTask<T = unknown> {
  * Statistics about queue operations
  */
 export interface QueueStats {
-  /** Total tasks processed */
+  /**
+   * Total tasks processed
+   */
   totalProcessed: number;
 
-  /** Total tasks failed */
+  /**
+   * Total tasks failed
+   */
   totalFailed: number;
 
-  /** Current queue length */
+  /**
+   * Current queue length
+   */
   currentLength: number;
 
-  /** Is queue currently processing */
+  /**
+   * Is queue currently processing
+   */
   isProcessing: boolean;
 
-  /** Average wait time in ms */
+  /**
+   * Average wait time in ms
+   */
   averageWaitTime: number;
 
-  /** Average execution time in ms */
+  /**
+   * Average execution time in ms
+   */
   averageExecutionTime: number;
 }
 
@@ -75,11 +101,17 @@ export class Queue {
   private tasks: QueueTask<any>[] = [];
   private isProcessing = false;
   private nextTaskId = 1;
-  /** Whether a processing microtask has been scheduled but not started yet */
+  /**
+   * Whether a processing microtask has been scheduled but not started yet
+   */
   private processingScheduled = false;
-  /** Monotonic counter incremented on each clear to mark cut-off for pending tasks */
+  /**
+   * Monotonic counter incremented on each clear to mark cut-off for pending tasks
+   */
   private clearEpoch = 0;
-  /** Error used for the last clear() invocation */
+  /**
+   * Error used for the last clear() invocation
+   */
   private lastClearError: Error | null = null;
 
   // Statistics
@@ -91,7 +123,9 @@ export class Queue {
   };
 
   constructor(
-    /** Name of the queue for debugging */
+    /**
+     * Name of the queue for debugging
+     */
     public readonly name: string,
   ) {}
 
@@ -178,12 +212,16 @@ export class Queue {
     return Math.max(0, this.tasks.length - (this.processingScheduled ? 1 : 0));
   }
 
-  /** Checks if the queue is currently processing a task. */
+  /**
+   * Checks if the queue is currently processing a task.
+   */
   get processing(): boolean {
     return this.isProcessing;
   }
 
-  /** Gets queue statistics. */
+  /**
+   * Gets queue statistics.
+   */
   getStats(): QueueStats {
     const total = this.stats.totalProcessed || 1;
     return {
@@ -226,7 +264,9 @@ export class Queue {
     }
   }
 
-  /** Gets debug information about the queue state. */
+  /**
+   * Gets debug information about the queue state.
+   */
   debug(): string {
     return `Queue(${this.name}): length=${this.tasks.length}, processing=${this.isProcessing}`;
   }
