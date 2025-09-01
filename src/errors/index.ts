@@ -8,6 +8,8 @@ import { AS_ERROR_CODES } from "../core/constants";
 
 /**
  * Base error class for all AppleScript-related errors.
+ *
+ * @public
  */
 export class AppleScriptError extends Error {
   constructor(
@@ -22,8 +24,16 @@ export class AppleScriptError extends Error {
 /**
  * Error thrown when AppleScript times out waiting for an Apple Event.
  * This typically happens when the target application is unresponsive.
+ *
+ * @public
  */
 export class TimeoutAppleEventError extends AppleScriptError {
+  /**
+   * @remarks
+   * Thrown by AppleScript when the target application does not respond to an Apple Event
+   * within the AppleScript timeout window. Consider increasing `timeoutSec` or checking
+   * that the app is launched and responsive.
+   */
   constructor(
     message: string = "AppleScript timed out waiting for Apple Event",
     public readonly appId: string,
@@ -37,8 +47,15 @@ export class TimeoutAppleEventError extends AppleScriptError {
 /**
  * Error thrown when the Node.js controller times out.
  * This is different from AppleScript timeout - it's enforced by Node.js.
+ *
+ * @public
  */
 export class TimeoutOSAScriptError extends AppleScriptError {
+  /**
+   * @remarks
+   * Enforced by Node.js controller. Indicates the outer process exceeded
+   * `controllerTimeoutMs`. Increase the controller timeout or optimize the script.
+   */
   constructor(
     message: string,
     public readonly appId: string,
@@ -52,8 +69,15 @@ export class TimeoutOSAScriptError extends AppleScriptError {
 
 /**
  * Error thrown when a script doesn't return a value.
+ *
+ * @public
  */
 export class MissingReturnError extends AppleScriptError {
+  /**
+   * @remarks
+   * The user AppleScript did not return a value. Ensure the script body contains
+   * a `return` statement compatible with the selected payload kind.
+   */
   constructor(
     message: string = "Script did not return a value",
     public readonly operationName: string,
@@ -65,8 +89,15 @@ export class MissingReturnError extends AppleScriptError {
 
 /**
  * Error thrown when the return type doesn't match the expected format.
+ *
+ * @public
  */
 export class InvalidReturnTypeError extends AppleScriptError {
+  /**
+   * @remarks
+   * The returned AppleScript value did not match the protocol expectations.
+   * For example: rows require a list of lists; sections require a list of pairs; scalar expects a primitive.
+   */
   constructor(
     message: string,
     public readonly expectedType: string,
@@ -79,21 +110,36 @@ export class InvalidReturnTypeError extends AppleScriptError {
 
 /**
  * Error thrown when an action returns an invalid code.
+ *
+ * @public
  */
 export class InvalidActionCodeError extends AppleScriptError {
+  /**
+   * @remarks
+   * Action operations must return one of the {@link ACTION_CODES} values ("0" | "1" | "2").
+   */
   constructor(
     public readonly receivedCode: string,
     public readonly operationName: string,
   ) {
-    super(`Invalid action code: ${receivedCode} (operation: ${operationName})`, "InvalidActionCodeError");
+    super(
+      `Invalid action code: ${receivedCode} (operation: ${operationName})`,
+      "InvalidActionCodeError",
+    );
     this.name = "InvalidActionCodeError";
   }
 }
 
 /**
  * Generic script execution error.
+ *
+ * @public
  */
 export class ScriptError extends AppleScriptError {
+  /**
+   * @remarks
+   * Represents an error originating from AppleScript. Includes the numeric code when available.
+   */
   constructor(
     message: string,
     public readonly code: number,
@@ -107,8 +153,14 @@ export class ScriptError extends AppleScriptError {
 
 /**
  * Error thrown when the protocol response cannot be parsed.
+ *
+ * @public
  */
 export class ParseError extends AppleScriptError {
+  /**
+   * @remarks
+   * The stdout from `osascript` did not match the expected OK/ERR protocol. Inspect `rawOutput`.
+   */
   constructor(
     message: string,
     public readonly rawOutput: string,
@@ -121,8 +173,14 @@ export class ParseError extends AppleScriptError {
 
 /**
  * Error thrown when input validation fails.
+ *
+ * @public
  */
 export class InputValidationError extends AppleScriptError {
+  /**
+   * @remarks
+   * Zod validation failed for the input parameters. Inspect `issues` for details.
+   */
   constructor(
     message: string,
     public readonly issues: unknown[],
@@ -135,8 +193,14 @@ export class InputValidationError extends AppleScriptError {
 
 /**
  * Error thrown when output validation fails.
+ *
+ * @public
  */
 export class OutputValidationError extends AppleScriptError {
+  /**
+   * @remarks
+   * Zod validation failed for the output payload. Inspect `issues` for details.
+   */
   constructor(
     message: string,
     public readonly issues: unknown[],
@@ -149,6 +213,8 @@ export class OutputValidationError extends AppleScriptError {
 
 /**
  * Creates an appropriate error instance based on the error code.
+ *
+ * @public
  */
 export function createErrorFromCode(
   code: number,
@@ -178,17 +244,40 @@ export function createErrorFromCode(
 
 /**
  * Type guard to check if an error is an AppleScriptError.
+ *
+ * @public
  */
 export function isAppleScriptError(error: unknown): error is AppleScriptError {
+  /**
+   * @example
+   * ```ts
+   * try {
+   *   // ...
+   * } catch (e) {
+   *   if (isAppleScriptError(e)) console.error(e.kind)
+   * }
+   * ```
+   */
   return error instanceof AppleScriptError;
 }
 
 /**
  * Type guard to check if an error is a timeout error.
+ *
+ * @public
  */
 export function isTimeoutError(
   error: unknown,
 ): error is TimeoutAppleEventError | TimeoutOSAScriptError {
+  /**
+   * @example
+   * ```ts
+   * const r = await runner.run(op, input)
+   * if (!r.ok && isTimeoutError(r.error.cause)) {
+   *   // adjust timeouts or retry
+   * }
+   * ```
+   */
   return (
     error instanceof TimeoutAppleEventError ||
     error instanceof TimeoutOSAScriptError
@@ -197,8 +286,17 @@ export function isTimeoutError(
 
 /**
  * Gets a user-friendly error message from any error.
+ *
+ * @public
  */
 export function getUserFriendlyMessage(error: unknown): string {
+  /**
+   * @example
+   * ```ts
+   * const msg = getUserFriendlyMessage(err)
+   * console.log(msg)
+   * ```
+   */
   if (error instanceof Error) return error.message;
   if (typeof error === "string") return error;
   if (error === null) return "null";
