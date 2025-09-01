@@ -6,76 +6,147 @@
  */
 import { z } from "zod";
 import type { PayloadKind } from "../core/constants.js";
+import type { ParamHint } from "../core/marshaller.js";
 
 /**
- * Script function that generates AppleScript code.
- * Receives an object with parameter variable names.
+ * Script function that generates the AppleScript body.
+ *
+ * @remarks
+ * The function receives a map of variable names, one per input key. Use these names inside
+ * your AppleScript body. The builder injects literal values into variables in the prologue
+ * and replaces `${key}` placeholders with the corresponding variable names.
+ *
+ * @example
+ * ```ts
+ * // Input schema: z.object({ url: z.string().url() })
+ * const script: ScriptFunction<{ url: string }> = ({ url }) => `
+ *   -- ${'${'}url} is something like __ARG__url
+ *   tell application id "com.apple.Safari"
+ *     set URL of front document to ${'${'}url}
+ *     return "1" -- success
+ *   end tell
+ * `
+ * ```
+ *
+ * @public
  */
 export type ScriptFunction<TInput> = (vars: VariableMap<TInput>) => string;
 
 /**
  * Maps input schema keys to AppleScript variable names.
+ *
+ * @remarks
+ * Only strings, numbers, booleans, arrays and JSON-serializable objects are supported.
+ * Strings and arrays have size limits; see {@link MAX_SIZES}.
+ *
+ * @public
  */
 export type VariableMap<T> = {
   [K in keyof T]: string;
 };
 
-/** Base definition for all operations. */
+/**
+ * Base definition for all operations.
+ *
+ * @remarks
+ * Prefer factory functions: {@link scalar}, {@link rows}, {@link sections}, {@link action}.
+ *
+ * @see scalar
+ * @see rows
+ * @see sections
+ * @see action
+ * @public
+ */
 export interface BaseOperationDef<
   TKind extends PayloadKind,
   TInput extends z.ZodType,
   TOutput extends z.ZodType,
 > {
-  /** Operation name */
+  /**
+   * Operation name
+   */
   name: string;
 
-  /** Payload kind */
+  /**
+   * Payload kind
+   */
   kind: TKind;
 
-  /** Input schema */
+  /**
+   * Input schema
+   */
   input: TInput;
 
-  /** Output schema */
+  /**
+   * Output schema
+   */
   output: TOutput;
 
-  /** User script function */
+  /**
+   * User script function
+   */
   script: ScriptFunction<z.infer<TInput>>;
 
-  /** Optional parameter hints */
-  hints?: Record<string, any>;
+  /**
+   * Optional parameter hints
+   */
+  hints?: Record<string, ParamHint>;
 
-  /** Whether to validate input by default */
+  /**
+   * Whether to validate input by default
+   */
   validateInput?: boolean;
 
-  /** Whether to validate output by default */
+  /**
+   * Whether to validate output by default
+   */
   validateOutput?: boolean;
 }
 
-/** Operation definition for scalar returns. */
+/**
+ * Operation definition for scalar returns.
+ * @see scalar
+ * @public
+ */
 export interface ScalarOperationDef<
   TInput extends z.ZodType = z.ZodType,
   TOutput extends z.ZodType = z.ZodType,
 > extends BaseOperationDef<"scalar", TInput, TOutput> {}
 
-/** Operation definition for action returns. */
+/**
+ * Operation definition for action returns.
+ * @see action
+ * @public
+ */
 export interface ActionOperationDef<
   TInput extends z.ZodType = z.ZodType,
   TOutput extends z.ZodType = z.ZodType,
 > extends BaseOperationDef<"action", TInput, TOutput> {}
 
-/** Operation definition for rows returns. */
+/**
+ * Operation definition for rows returns.
+ * @see rows
+ * @public
+ */
 export interface RowsOperationDef<
   TInput extends z.ZodType = z.ZodType,
   TOutput extends z.ZodType = z.ZodType,
 > extends BaseOperationDef<"rows", TInput, TOutput> {}
 
-/** Operation definition for sections returns. */
+/**
+ * Operation definition for sections returns.
+ * @see sections
+ * @public
+ */
 export interface SectionsOperationDef<
   TInput extends z.ZodType = z.ZodType,
   TOutput extends z.ZodType = z.ZodType,
 > extends BaseOperationDef<"sections", TInput, TOutput> {}
 
-/** Union of all operation definition types. */
+/**
+ * Union of all operation definition types.
+ * @public
+ */
 export type OperationDef<
   TInput extends z.ZodType = z.ZodType,
   TOutput extends z.ZodType = z.ZodType,
@@ -85,7 +156,14 @@ export type OperationDef<
   | RowsOperationDef<TInput, TOutput>
   | SectionsOperationDef<TInput, TOutput>;
 
-/** Type-safe operation instance. */
+/**
+ * Type-safe operation instance.
+ *
+ * @remarks
+ * Produced by factory functions and consumed by the runner.
+ *
+ * @public
+ */
 export interface Operation<
   TInput extends z.ZodType = z.ZodType,
   TOutput extends z.ZodType = z.ZodType,
@@ -93,12 +171,14 @@ export interface Operation<
   def: OperationDef<TInput, TOutput>;
 }
 
-/** Result from running an operation. */
-export type OperationResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: OperationError };
-
-/** Error information from a failed operation. */
+/**
+ * Error information from a failed operation.
+ *
+ * @remarks
+ * Normalized error payload returned by failed runs.
+ *
+ * @public
+ */
 export interface OperationError {
   message: string;
   opName: string;
@@ -108,15 +188,33 @@ export interface OperationError {
   cause?: unknown;
 }
 
-/** Options for running an operation. */
+/**
+ * Options for running an operation.
+ *
+ * @remarks
+ * Timeouts precedence: `RunOptions.timeoutSec` \> `RunnerConfig.timeoutByKind[kind]` \>
+ * `RunnerConfig.defaultTimeoutSec` \> `DEFAULT_TIMEOUTS.APPLESCRIPT_SEC`.
+ * Controller timeout works similarly with `defaultControllerTimeoutMs`.
+ * Per-run overrides for timeouts and validation.
+ *
+ * @public
+ */
 export interface RunOptions {
-  /** Override AppleScript timeout in seconds */
+  /**
+   * Override AppleScript timeout in seconds
+   */
   timeoutSec?: number;
-  /** Override controller timeout in ms */
+  /**
+   * Override controller timeout in milliseconds
+   */
   controllerTimeoutMs?: number;
-  /** Skip input validation */
+  /**
+   * Skip input validation (overrides per-operation and runner defaults)
+   */
   skipInputValidation?: boolean;
-  /** Skip output validation */
+  /**
+   * Skip output validation (overrides per-operation and runner defaults)
+   */
   skipOutputValidation?: boolean;
 }
 
@@ -139,7 +237,15 @@ export function isSectionsOperation(
   return def.kind === "sections";
 }
 
+/**
+ * Helper type to infer input shape from an Operation.
+ * @public
+ */
 export type OperationInput<T> =
   T extends Operation<infer I, any> ? z.infer<I> : never;
+/**
+ * Helper type to infer output shape from an Operation.
+ * @public
+ */
 export type OperationOutput<T> =
   T extends Operation<any, infer O> ? z.infer<O> : never;
