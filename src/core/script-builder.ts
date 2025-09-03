@@ -17,9 +17,9 @@ import {
   PayloadKind,
   RS,
   US,
-} from "./constants";
-import type { MarshalledParam } from "./marshaller";
-import { generatePrologue } from "./marshaller";
+} from "./constants.js";
+import type { MarshalledParam } from "./marshaller.js";
+import { generatePrologue } from "./marshaller.js";
 
 /**
  * Options for building an AppleScript

@@ -1,8 +1,8 @@
 /**
  * @fileoverview Type definitions for the AppleRunner.
  */
-import type { PayloadKind } from "../core/constants";
-import type { OperationError } from "../operations/types";
+import type { PayloadKind } from "../core/constants.js";
+import type { OperationError } from "../operations/types.js";
 
 /**
  * Configuration for the AppleRunner.

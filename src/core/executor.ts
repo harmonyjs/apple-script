@@ -10,7 +10,7 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
-import type { RawResponse } from "./protocol";
+import type { RawResponse } from "./protocol.js";
 
 const execFileAsync = promisify(execFile);
 

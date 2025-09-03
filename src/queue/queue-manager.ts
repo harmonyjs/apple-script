@@ -1,8 +1,8 @@
 /**
  * @fileoverview Queue manager for handling multiple queues per appId.
  */
-import { Queue } from "./queue";
-import type { QueueStats } from "./queue";
+import { Queue } from "./queue.js";
+import type { QueueStats } from "./queue.js";
 
 /**
  * Manager for multiple queues indexed by application ID.

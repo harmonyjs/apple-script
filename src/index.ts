@@ -37,8 +37,8 @@
  */
 
 // Main API
-export { createAppleRunner, AppleRunner } from "./runner/runner";
-export { operation } from "./operations/operation";
+export { createAppleRunner, AppleRunner } from "./runner/runner.js";
+export { operation } from "./operations/operation.js";
 /**
  * Convenience namespace with factory functions: {@link scalar}, {@link rows}, {@link sections}, {@link action}, and {@link createOperation}.
  * Prefer `operation.scalar({...})` style; use `operation.create(...)` only for advanced customization.
@@ -51,8 +51,8 @@ export {
   rows,
   sections,
   ACTION_OUTPUT_SCHEMA,
-} from "./operations/operation";
-export type { ActionOutputSchema } from "./operations/operation";
+} from "./operations/operation.js";
+export type { ActionOutputSchema } from "./operations/operation.js";
 
 // Public option types for operation factories
 export type {
@@ -60,7 +60,7 @@ export type {
   ActionOptions,
   RowsOptions,
   SectionsOptions,
-} from "./operations/operation";
+} from "./operations/operation.js";
 
 // Types for runner
 export type {
@@ -71,7 +71,7 @@ export type {
   DebugInfo,
   ResultInfo,
   ErrorInfo,
-} from "./runner/types";
+} from "./runner/types.js";
 
 // Utility functions for results
 export {
@@ -80,7 +80,7 @@ export {
   unwrapResult,
   getResultData,
   getResultError,
-} from "./runner/types";
+} from "./runner/types.js";
 
 // Types for operations
 export type {
@@ -97,7 +97,7 @@ export type {
   SectionsOperationDef,
   ScriptFunction,
   VariableMap,
-} from "./operations/types";
+} from "./operations/types.js";
 
 // Protocol constants (for advanced users)
 export {
@@ -107,9 +107,9 @@ export {
   ACTION_CODES,
   DEFAULT_TIMEOUTS,
   MAX_SIZES,
-} from "./core/constants";
+} from "./core/constants.js";
 
-export type { PayloadKind, ActionCode } from "./core/constants";
+export type { PayloadKind, ActionCode } from "./core/constants.js";
 
 // Error types
 export {
@@ -126,7 +126,7 @@ export {
   isAppleScriptError,
   isTimeoutError,
   getUserFriendlyMessage,
-} from "./errors";
+} from "./errors/index.js";
 
 // Marshaller types (for advanced users)
-export type { ParamHint, MarshalledParam } from "./core/marshaller";
+export type { ParamHint, MarshalledParam } from "./core/marshaller.js";

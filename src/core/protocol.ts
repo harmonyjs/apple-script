@@ -15,8 +15,8 @@ import {
   GS,
   RS,
   US,
-} from "./constants";
-import { InvalidActionCodeError } from "../errors";
+} from "./constants.js";
+import { InvalidActionCodeError } from "../errors/index.js";
 
 /**
  * Raw response from AppleScript execution

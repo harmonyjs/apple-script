@@ -18,9 +18,9 @@
  * See also: {@link isSuccess}, {@link getResultData}, {@link unwrapResult}.
  */
 import { z } from "zod";
-import { DEFAULT_TIMEOUTS, PayloadKind } from "../core/constants";
-import { buildAppleScript } from "../core/script-builder";
-import { executeAppleScript } from "../core/executor";
+import { DEFAULT_TIMEOUTS, PayloadKind } from "../core/constants.js";
+import { buildAppleScript } from "../core/script-builder.js";
+import { executeAppleScript } from "../core/executor.js";
 import {
   parseProtocolResponse,
   isSuccessResponse,
@@ -28,23 +28,23 @@ import {
   parseSections,
   parseScalar,
   parseAction,
-} from "../core/protocol";
-import { marshalParams } from "../core/marshaller";
-import { QueueManager } from "../queue/queue-manager";
+} from "../core/protocol.js";
+import { marshalParams } from "../core/marshaller.js";
+import { QueueManager } from "../queue/queue-manager.js";
 import type {
   Operation,
   OperationDef,
   OperationError,
   RunOptions,
-} from "../operations/types";
+} from "../operations/types.js";
 import {
   isActionOperation,
   isRowsOperation,
   isScalarOperation,
   isSectionsOperation,
-} from "../operations/types";
-import type { RunnerConfig, RunResult, RunnerStats } from "./types";
-import type { DebugInfo, ResultInfo, ErrorInfo } from "./types";
+} from "../operations/types.js";
+import type { RunnerConfig, RunResult, RunnerStats } from "./types.js";
+import type { DebugInfo, ResultInfo, ErrorInfo } from "./types.js";
 import {
   createErrorFromCode,
   InputValidationError,
@@ -53,7 +53,7 @@ import {
   MissingReturnError,
   OutputValidationError,
   ScriptError,
-} from "../errors";
+} from "../errors/index.js";
 
 /**
  * Executes operations against a target macOS application with validation, timeouts, retries, and hooks.
