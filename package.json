@@ -1,6 +1,6 @@
 {
   "name": "@avavilov/apple-script",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "Type-safe AppleScript execution library for Node.js with Zod validation",
   "author": "Andrey Vavilov <a@vavilov.dev>",
   "license": "MIT",
