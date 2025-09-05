@@ -140,6 +140,8 @@ export interface RowsOperationDef<
  * - `mapRow`: custom mapper for advanced cases. If provided, takes precedence over `columns`.
  * - If neither is provided, the runner will attempt to infer object keys from the Zod output element
  *   when it is an array of objects. If inference fails, rows remain arrays.
+ *
+ * @public
  */
 export interface RowsOperationDef<
   TInput extends z.ZodType = z.ZodType,
