@@ -117,7 +117,7 @@ export class AppleRunner {
    * Runs a typed operation against the configured application.
    *
    * Contract:
-   * - Inputs: an {@link Operation} and its input shape ({@link z.infer} from the operation's input schema);
+  * - Inputs: an {@link Operation} and its input shape (`z.infer` from the operation's input schema);
    *   optional {@link RunOptions} for timeouts/validation overrides.
    * - Output: a {@link RunResult} with either parsed & validated data or a normalized error.
    * - Retries: by default only timeout errors are retried when `maxRetries > 0`; other errors are not retried.
