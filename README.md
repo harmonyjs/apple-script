@@ -396,6 +396,7 @@ The library follows a layered architecture:
 - [Protocol Specification](docs/protocol.md) - Detailed protocol documentation
 - [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions
 - [Queue Implementation](src/queue/README.md) - Queue semantics and behavior
+- [Release Guide](docs/how-to-release.md) - How to publish new versions
 
 ## License
 
