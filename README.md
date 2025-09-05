@@ -141,6 +141,44 @@ const listTabs = operation.rows({
 });
 ```
 
+##### Rows → Objects Mapping
+The runner automatically maps rows (string arrays) to objects based on:
+1. **`mapRow`** function if provided (highest priority)
+2. **`columns`** array if provided (explicit column names)
+3. **Zod schema inference** from `output: z.array(z.object({...}))`
+
+```typescript
+// Explicit columns (recommended for clarity)
+const listTabs = operation.rows({
+  name: 'listTabs',
+  columns: ['id', 'url', 'title'], // Maps row[0]→id, row[1]→url, row[2]→title
+  output: z.array(z.object({
+    id: z.coerce.number(),
+    url: z.string().url(),
+    title: z.string()
+  })),
+  script: () => `...`
+});
+
+// Custom mapping function
+const listTabsWithDomain = operation.rows({
+  name: 'listTabsWithDomain',
+  mapRow: ([id, url, title]) => ({
+    id,
+    title,
+    domain: new URL(url).hostname
+  }),
+  output: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    domain: z.string()
+  })),
+  script: () => `...`
+});
+```
+
+**Note**: Row mapping happens *before* output validation, ensuring consistent behavior regardless of validation settings. See [Troubleshooting](docs/troubleshooting.md#rows--objects-mapping-doesnt-work) for common issues.
+
 #### 4. Sections Operations
 Return grouped data with named sections (see [Protocol: sections](docs/protocol.md#sections)):
 
@@ -352,6 +390,12 @@ The library follows a layered architecture:
 3. **Operations & Queue Layer**: Operation definitions, queue management, validation
 4. **Core Layer**: Script building, marshalling, [protocol](docs/protocol.md) parsing
 5. **System Layer**: `osascript` execution via `child_process`
+
+## Additional Documentation
+
+- [Protocol Specification](docs/protocol.md) - Detailed protocol documentation
+- [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions
+- [Queue Implementation](src/queue/README.md) - Queue semantics and behavior
 
 ## License
 

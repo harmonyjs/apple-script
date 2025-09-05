@@ -252,6 +252,16 @@ export interface RowsOptions<
    */
   script: ScriptFunction<z.infer<TInput>>;
   /**
+   * Declarative column names for mapping row arrays to objects.
+   * If provided, takes effect before validation. Ignored when `mapRow` is set.
+   */
+  columns?: string[];
+  /**
+   * Custom row mapper. Receives raw columns and row index; should return the object/value for this row.
+   * If provided, it takes precedence over `columns` and schema-based inference.
+   */
+  mapRow?: (cols: string[], rowIndex: number) => unknown;
+  /**
    * Marshalling hints keyed by input keys (see {@link ParamHint})
    */
   hints?: Record<string, ParamHint>;
@@ -318,6 +328,8 @@ export function rows<TInput extends z.ZodType, TOutput extends z.ZodType>(
     input: options.input,
     output: options.output,
     script: options.script,
+    columns: options.columns,
+    mapRow: options.mapRow,
     hints: options.hints,
     validateInput: options.validateInput,
     validateOutput: options.validateOutput,

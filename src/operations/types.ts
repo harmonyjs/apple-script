@@ -132,6 +132,22 @@ export interface RowsOperationDef<
   TInput extends z.ZodType = z.ZodType,
   TOutput extends z.ZodType = z.ZodType,
 > extends BaseOperationDef<"rows", TInput, TOutput> {}
+/**
+ * Extended definition for rows operations including optional mapping helpers.
+ *
+ * @remarks
+ * - `columns`: declarative column names to map row arrays into objects.
+ * - `mapRow`: custom mapper for advanced cases. If provided, takes precedence over `columns`.
+ * - If neither is provided, the runner will attempt to infer object keys from the Zod output element
+ *   when it is an array of objects. If inference fails, rows remain arrays.
+ */
+export interface RowsOperationDef<
+  TInput extends z.ZodType = z.ZodType,
+  TOutput extends z.ZodType = z.ZodType,
+> extends BaseOperationDef<"rows", TInput, TOutput> {
+  columns?: string[];
+  mapRow?: (cols: string[], rowIndex: number) => unknown;
+}
 
 /**
  * Operation definition for sections returns.

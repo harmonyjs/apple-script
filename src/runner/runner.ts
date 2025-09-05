@@ -44,6 +44,7 @@ import {
   isSectionsOperation,
 } from "../operations/types.js";
 import type { RunnerConfig, RunResult, RunnerStats } from "./types.js";
+import { mapRowsOutput } from "./map-rows.js";
 import type { DebugInfo, ResultInfo, ErrorInfo } from "./types.js";
 import {
   createErrorFromCode,
@@ -252,30 +253,12 @@ export class AppleRunner {
         else if (isSectionsOperation(def)) output = parseSections(payload);
         else output = payload;
 
+        // Perform rows mapping BEFORE validation so it also applies when validation is disabled.
+        if (isRowsOperation(def) && Array.isArray(output)) {
+          output = mapRowsOutput(def as any, output as any);
+        }
+
         if (validateOutput) {
-          // Special handling for rows: if schema is array(object), map columns to object keys
-          // Mapping rules: extra columns are ignored; missing keys become undefined and will be validated by the schema.
-          if (isRowsOperation(def)) {
-            const outSchema: any = def.output;
-            const elem =
-              outSchema?._def?.type ??
-              outSchema?._def?.schema ??
-              outSchema?.element; // try common places
-            const shape =
-              elem?.shape ??
-              (typeof elem?._def?.shape === "function"
-                ? elem._def.shape()
-                : undefined);
-            const keys = shape ? Object.keys(shape) : undefined;
-            if (Array.isArray(keys) && Array.isArray(output)) {
-              output = (output as any[]).map((row) => {
-                const obj: Record<string, any> = {};
-                for (let i = 0; i < keys.length; i++)
-                  obj[keys[i] as string] = (row as any)[i];
-                return obj;
-              });
-            }
-          }
           const parsed = (def.output as any).safeParse?.(output);
           if (!parsed?.success) {
             throw new OutputValidationError(
