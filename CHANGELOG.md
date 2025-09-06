@@ -6,6 +6,12 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+### Changed
+- Centralized all unsafe assertions into `src/shared/unsafe-type-casts.ts` and removed scattered `as any` across the codebase.
+- Renamed internal module `src/shared/type-adapters.ts` to `src/shared/unsafe-type-casts.ts`.
+- If you imported internal helpers from `#shared/type-adapters`, switch to `#shared/unsafe-type-casts`.
+	Public API remains unchanged.
+
 ## [0.1.0] - 2025-09-05
 ### Added
 - First minor release of `@avavilov/apple-script`
@@ -19,5 +25,6 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - API Extractor setup and generated API docs pipeline
 - Comprehensive unit tests and an E2E example test
 
-[Unreleased]: https://github.com/harmonyjs/apple-script/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/harmonyjs/apple-script/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/harmonyjs/apple-script/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/harmonyjs/apple-script/compare/v0.0.4...v0.1.0

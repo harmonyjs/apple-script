@@ -1,4 +1,5 @@
 import { inspect } from "node:util";
+import { hasProperty } from "#shared/unsafe-type-casts.js";
 
 function compilePatterns(raw: string | undefined): RegExp[] {
   if (!raw) return [];
@@ -35,11 +36,21 @@ export function createDebug(ns: string) {
   };
 }
 
-export function describeSchema(s: any): string {
+export function describeSchema(s: unknown): string {
   try {
     const ctor = s?.constructor?.name ?? typeof s;
-    const tname = (s as any)?._def?.typeName;
-    const keys = (s as any)?._def ? Object.keys((s as any)._def) : [];
+    // Narrow _def once and reuse the refined object
+    let def: Record<string, unknown> | undefined;
+    if (hasProperty(s, "_def")) {
+      const maybe = s._def;
+      if (maybe && typeof maybe === "object") {
+        def = maybe as Record<string, unknown>;
+      }
+    }
+    const tname = def && hasProperty(def, "typeName")
+      ? String(def.typeName)
+      : undefined;
+    const keys = def ? Object.keys(def as object) : [];
     return `${ctor}${tname ? `/${tname}` : ""}${keys.length ? ` defKeys=${keys.join(",")}` : ""}`;
   } catch {
     return String(s);

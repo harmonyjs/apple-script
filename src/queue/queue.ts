@@ -29,7 +29,7 @@ export interface QueueTask<T = unknown> {
   /**
    * Promise rejector for task errors
    */
-  reject: (error: any) => void;
+  reject: (error: unknown) => void;
 
   /**
    * Timestamp when task was enqueued
@@ -44,7 +44,7 @@ export interface QueueTask<T = unknown> {
   /**
    * Optional metadata about the task
    */
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -134,14 +134,15 @@ export class Queue {
    */
   async add<T>(
     execute: () => Promise<T>,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
   ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       const id = `${this.name}-${this.nextTaskId++}`;
-      const task: QueueTask<any> = {
+      const resolveTask = (value: T) => resolve(value);
+      const task: QueueTask<unknown> = {
         id,
-        execute: execute as any,
-        resolve: resolve as any,
+        execute: async () => execute(),
+        resolve: (value) => resolveTask(value as T),
         reject,
         enqueuedAt: Date.now(),
         epoch: this.clearEpoch,

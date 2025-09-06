@@ -31,7 +31,7 @@ import type {
 import type { RunnerConfig, RunResult, RunnerStats } from "./types.js";
 import { ExecutionPipeline } from "./execution-pipeline.js";
 import type { DebugInfo, ResultInfo, ErrorInfo } from "./types.js";
-import { extractErrorCode } from "../shared/type-adapters.js";
+import { extractErrorCode, unsafeCast } from "#shared/unsafe-type-casts.js";
 import {
   createErrorFromCode,
   InvalidActionCodeError,
@@ -221,9 +221,9 @@ export class AppleRunner {
           output,
           tookMs,
         } satisfies ResultInfo);
-        // WHY as any: TypeScript cannot infer the exact output type from the generic
-        // OperationDef. The output has already been validated by the pipeline.
-        return { ok: true, data: output as any };
+  // WHY: After validation, `output` is guaranteed to match z.infer<TOutput>.
+  // Use centralized unsafeCast to localize the assertion.
+  return { ok: true, data: unsafeCast<z.infer<TOutput>>(output) };
       }
 
       const err = createErrorFromCode(

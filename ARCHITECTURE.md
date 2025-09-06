@@ -13,7 +13,9 @@ This document summarizes the internal module boundaries and layering rules to ke
   - AppleScript list helpers (`applescript-list.ts`)
 
 - `src/shared/` — cross-cutting utilities used by multiple layers:
-  - Type adapters and safe coercions (`type-adapters.ts`)
+  - Centralized unsafe casts and helpers (`unsafe-type-casts.ts`)
+    - Why: to concentrate unavoidable unsafe assertions (e.g., Zod interop, dynamic record access) in one auditable place. This keeps the rest of the codebase free from scattered `as any` and simplifies reviews.
+    - Example import: `import { hasProperty } from '#shared/unsafe-type-casts.js'`
 
 - `src/errors/` — public error types and factory (modularized by concern).
 

@@ -11,6 +11,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
 import type { RawResponse } from "./protocol/parser.js";
+import { hasProperty, getObjectProperty } from "../shared/unsafe-type-casts.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -108,25 +109,33 @@ export async function executeAppleScript(
       exitCode: 0,
       durationMs: Date.now() - startTime,
     };
-  } catch (error: any) {
+  } catch (e: unknown) {
+    // Use centralized helpers for property access
+    const code = hasProperty(e, "code") ? getObjectProperty<number | string>(e as Record<string, unknown>, "code") : undefined;
+    const signal = hasProperty(e, "signal") ? getObjectProperty<string>(e as Record<string, unknown>, "signal") : undefined;
+    const message = hasProperty(e, "message") ? getObjectProperty<string>(e as Record<string, unknown>, "message") : "Unknown osascript error";
+    const stdout = hasProperty(e, "stdout") ? getObjectProperty<string>(e as Record<string, unknown>, "stdout") : "";
+    const stderr = hasProperty(e, "stderr") ? getObjectProperty<string>(e as Record<string, unknown>, "stderr") : "";
+    const exitCode = typeof code === "number" ? code : null;
+
     // Handle timeout specifically
-    if (error.code === "ETIMEDOUT" || error.signal === "SIGTERM") {
+    if (code === "ETIMEDOUT" || signal === "SIGTERM") {
       throw new OSAScriptError(
         "osascript timed out",
-        error.code ?? "ETIMEDOUT",
-        error.stdout || "",
-        error.stderr || "",
-        error.code || null,
+        code ?? "ETIMEDOUT",
+        stdout,
+        stderr,
+        exitCode,
       );
     }
 
     // Handle other execution errors
     throw new OSAScriptError(
-      error.message || "Unknown osascript error",
-      error.code || "UNKNOWN",
-      error.stdout || "",
-      error.stderr || "",
-      error.code || null,
+      message,
+      code ?? "UNKNOWN",
+      stdout,
+      stderr,
+      exitCode,
     );
   }
 }

@@ -212,7 +212,7 @@ export function marshalParams(
   hints: Record<string, ParamHint> = {},
 ): MarshalledParam[] {
   return Object.keys(params).map((key) =>
-    marshalParam(key, (params as any)[key], hints[key]),
+    marshalParam(key, params[key], hints[key]),
   );
 }
 

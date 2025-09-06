@@ -25,7 +25,9 @@ import {
   safeParseWithSchema,
   extractZodIssues,
   getNormalizeRowsSetting,
-} from "../shared/type-adapters.js";
+  buildVarsMap,
+  unsafeCast,
+} from "#shared/unsafe-type-casts.js";
 
 export interface PipelineConfig {
   appId: string;
@@ -62,9 +64,8 @@ export class ExecutionPipeline {
     input: z.infer<TInput>,
     options?: RunOptions,
   ) {
-    // WHY as any: marshalParams expects Record<string, unknown> but input could be any shape.
-    // The marshaller handles validation internally, so this cast is safe.
-    const params = marshalParams(input as Record<string, unknown>, def.hints ?? {});
+  // Centralized unsafe cast: marshaller expects a record
+  const params = marshalParams(unsafeCast<Record<string, unknown>>(input), def.hints ?? {});
     const timeoutSec =
       options?.timeoutSec ??
       this.cfg.timeoutByKind[def.kind] ??
@@ -74,11 +75,7 @@ export class ExecutionPipeline {
     const script = buildAppleScript({
       appId: this.cfg.appId,
       kind: def.kind as PayloadKind,
-      userScript: def.script(
-        // WHY as any: ScriptFunction expects VariableMap<T> but we have Record<string, string>.
-        // This is safe because the variable names are strings and match the input schema keys.
-        Object.fromEntries(params.map((p) => [p.paramName, p.varName])) as any,
-      ),
+      userScript: def.script(unsafeCast<any>(buildVarsMap(params))),
       params,
       timeoutSec,
       ensureReady: this.cfg.ensureAppReady,

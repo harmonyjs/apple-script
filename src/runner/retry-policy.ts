@@ -1,5 +1,5 @@
 import type { OperationError } from "../operations/types.js";
-import { hasProperty } from "#shared/type-adapters.js";
+import { hasProperty } from "#shared/unsafe-type-casts.js";
 
 /**
  * Default retry policy: retries only on AppleScript/controller timeouts.
