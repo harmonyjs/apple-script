@@ -4,7 +4,7 @@ import {
   coerceToNumber,
   coerceToBoolean,
   parseAppleScriptList,
-} from "./applescript-list.js";
+} from "./value-parsers.js";
 
 void test("coerceToNumber: numbers and numeric strings", () => {
   assert.equal(coerceToNumber(42), 42);
