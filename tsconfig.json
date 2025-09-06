@@ -46,7 +46,18 @@
     "stripInternal": true,
     "noEmitOnError": true,
     "preserveWatchOutput": true,
-    "assumeChangesOnlyAffectDirectDependencies": true
+    "assumeChangesOnlyAffectDirectDependencies": true,
+    "baseUrl": ".",
+    "paths": {
+      "#engine/*": ["src/engine/*"],
+      "#errors/*": ["src/errors/*"],
+      "#runner/*": ["src/runner/*"],
+      "#ops/*": ["src/operations/*"],
+      "#norm/*": ["src/normalization/*"],
+      "#queue/*": ["src/queue/*"],
+      "#shared/*": ["src/shared/*"],
+      "#root/*": ["src/*"]
+    }
   },
   "include": [
     "src/**/*.ts"
@@ -54,6 +65,7 @@
   "exclude": [
     "node_modules",
     "dist",
+    "src/core/**",
     "**/*.test.ts"
   ]
 }

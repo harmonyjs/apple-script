@@ -12,6 +12,16 @@
     ".": "./dist/index.js",
     "./package.json": "./package.json"
   },
+  "imports": {
+    "#engine/*": "./dist/engine/*",
+    "#errors/*": "./dist/errors/*",
+    "#runner/*": "./dist/runner/*",
+    "#ops/*": "./dist/operations/*",
+    "#norm/*": "./dist/normalization/*",
+    "#queue/*": "./dist/queue/*",
+    "#shared/*": "./dist/shared/*",
+    "#root/*": "./dist/*"
+  },
   "engines": {
     "node": ">=18.0.0"
   },
