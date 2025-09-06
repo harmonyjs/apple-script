@@ -20,7 +20,7 @@
 import { z } from "zod";
 import { DEFAULT_TIMEOUTS, PayloadKind } from "../engine/protocol/constants.js";
 import { executeAppleScript } from "../engine/executor.js";
-import { parseProtocolResponse, isSuccessResponse, ProtocolParseError } from "../engine/protocol/parser.js";
+import { parseProtocolResponse, isSuccessResponse } from "../engine/protocol/parser.js";
 import { QueueManager } from "../queue/queue-manager.js";
 import type {
   Operation,
@@ -32,14 +32,8 @@ import type { RunnerConfig, RunResult, RunnerStats } from "./types.js";
 import { ExecutionPipeline } from "./execution-pipeline.js";
 import type { DebugInfo, ResultInfo, ErrorInfo } from "./types.js";
 import { extractErrorCode, unsafeCast } from "#shared/unsafe-type-casts.js";
-import {
-  createErrorFromCode,
-  InvalidActionCodeError,
-  InvalidReturnTypeError,
-  MissingReturnError,
-  OutputValidationError,
-  ScriptError,
-} from "../errors/index.js";
+import { createErrorFromCode } from "../errors/index.js";
+import { createPublicErrorFromUnknown } from "#errors/factory.js";
 import { RunnerStatsManager } from "./runner-stats.js";
 import { isRetriableError, delay } from "./retry-policy.js";
 
@@ -250,41 +244,18 @@ export class AppleRunner {
       } satisfies ErrorInfo);
       return { ok: false, error: opErr };
     } catch (e: any) {
-      let err: OperationError;
-      // Map internal protocol errors to public API errors
-      if (e instanceof ProtocolParseError) {
-        const mapped = new InvalidActionCodeError("", def.name);
-        err = {
-          message: mapped.message,
-          opName: def.name,
-          appId: this.config.appId,
-          kind: def.kind,
-          cause: mapped,
-        };
-      } else
-      if (
-        e instanceof MissingReturnError ||
-        e instanceof InvalidReturnTypeError ||
-        e instanceof InvalidActionCodeError ||
-        e instanceof OutputValidationError ||
-        e instanceof ScriptError
-      ) {
-        err = {
-          message: e.message,
-          opName: def.name,
-          appId: this.config.appId,
-          kind: def.kind,
-          cause: e,
-        };
-      } else {
-        err = {
-          message: e?.message ?? "Unknown error",
-          opName: def.name,
-          appId: this.config.appId,
-          kind: def.kind,
-          cause: e,
-        };
-      }
+      const publicErr = createPublicErrorFromUnknown(e, {
+        operationName: def.name,
+        appId: this.config.appId,
+        kind: def.kind,
+      });
+      const err: OperationError = {
+        message: publicErr.message,
+        opName: def.name,
+        appId: this.config.appId,
+        kind: def.kind,
+        cause: publicErr,
+      };
       this.config.onError?.({
         opName: def.name,
         appId: this.config.appId,
