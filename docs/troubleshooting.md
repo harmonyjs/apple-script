@@ -40,16 +40,15 @@ const listTabs = operation.rows({
 
 ## Section data not parsing correctly
 
-**Problem**: `operation.sections()` returns raw strings instead of parsed data.
+**Problem**: `operation.sections()` returns unexpected raw structure.
 
-**Solution**: Use `parseSections` helper:
+**Solution**: Define the correct `output` schema for sections and let the runner parse the AppleScript payload. The parser converts GS/US encoded sections into JavaScript data before validation.
 
 ```typescript
-import { parseSections } from '@avavilov/apple-script';
-
 const op = operation.sections({
   name: 'getTabsByWindow',
-  output: z.string().transform(parseSections),  // ← Transform raw output
+  input: z.object({}),
+  output: z.record(z.array(z.string())),  // Keys -> array of strings
   script: () => `...`
 });
 ```
@@ -97,7 +96,23 @@ const runner = createAppleRunner({
 
 **Problem**: Validation fails when AppleScript returns numbers as strings.
 
-**Solution**: Use Zod coercion:
+**Preferred solution**: Enable built-in normalization (default: on) and use AppleScript-aware helper schemas:
+
+```ts
+import { z } from 'zod';
+import { asRecord, asNumber, asBoolean, asArray } from '@avavilov/apple-script';
+
+const output = z.array(asRecord({
+  id: z.string(),
+  active: z.boolean(),        // "true"/"1" → true
+  count: z.number(),          // "42" → 42
+  values: asArray(asNumber),  // "{1,2,3}" → [1,2,3]
+}));
+```
+
+Normalization can be disabled globally via `createAppleRunner({ normalizeRows: false })` or per-operation with `operation.rows({ normalizeRows: false, ... })`.
+
+**Alternative**: Use plain Zod coercion when you prefer explicit control:
 
 ```typescript
 output: z.array(z.object({
@@ -116,7 +131,7 @@ output: z.array(z.object({
 ```typescript
 const executeJS = operation.scalar({
   name: 'executeJS',
-  hints: { code: 'js' },  // ← Treat as JavaScript
+  hints: { code: { js: {} } },  // ← Treat as JavaScript (optional: { maxLenKb: 512 })
   input: z.object({
     code: z.string()
   }),

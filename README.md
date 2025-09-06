@@ -8,6 +8,7 @@ Type-safe AppleScript execution library for Node.js with Zod validation. Execute
 - ✅ **Validation**: Input/output validation using Zod schemas
 - 🎯 **Declarative API**: Define operations once, use everywhere
 - 🔄 **Queue Management**: Automatic serialization of operations per application
+- 🧹 **Automatic Normalization**: Best-effort, schema-guided normalization of rows output (numbers/booleans/arrays/tuples/objects)
 - ⚡ **Protocol Standardization**: Consistent encoding/decoding with control characters (see the [Protocol](docs/protocol.md))
 - 🛡️ **Security**: Safe parameter marshalling prevents injection attacks
 - 📊 **Observable**: Debug hooks, result callbacks, and error handlers
@@ -64,7 +65,6 @@ const openURL = operation.action({
   input: z.object({ 
     url: z.string().url() 
   }),
-  output: z.enum(['0', '1', '2']), // 0=failure, 1=success, 2=partial
   script: ({ url }) => `
     try
       open location ${url}
@@ -178,6 +178,44 @@ const listTabsWithDomain = operation.rows({
 ```
 
 **Note**: Row mapping happens *before* output validation, ensuring consistent behavior regardless of validation settings. See [Troubleshooting](docs/troubleshooting.md#rows--objects-mapping-doesnt-work) for common issues.
+Note: Row mapping happens before output validation, ensuring consistent behavior regardless of validation settings. See Troubleshooting for common issues.
+
+##### Automatic normalization (rows)
+After mapping rows to objects, the runner can automatically normalize stringly-typed values to match your output schema. This is a best-effort, schema-guided step that handles:
+
+- numbers: "42" → 42
+- booleans: "true"/"false"/"1"/"0" → true/false
+- arrays: "{1, 2, 3}" or "1,2,3" → [1, 2, 3]
+- tuples: "{a, b, c}" → [a, b, c]
+- objects: recursively normalizes fields using the object shape
+
+Toggles:
+- Global: `RunnerConfig.normalizeRows` (default: `true`)
+- Per-operation: `RowsOperationDef.normalizeRows` (overrides global)
+
+Example with AppleScript-aware helper schemas:
+
+```ts
+import { z } from 'zod';
+import { operation, asRecord, asArray, asNumber, asBoolean } from '@avavilov/apple-script';
+
+const listTabs = operation.rows({
+  name: 'listTabs',
+  columns: ['id', 'url', 'title', 'active', 'bounds', 'indices'],
+  // asRecord wraps number/boolean fields to accept AppleScript string representations
+  output: z.array(asRecord({
+    id: z.string(),
+    url: z.string().url(),
+    title: z.string(),
+    active: z.boolean(),      // "true" → true, "0" → false
+    bounds: asArray(asNumber) // "{0, 0, 800, 600}" → [0, 0, 800, 600]
+  })).describe('List of tabs')
+});
+
+// You can disable/enable normalization:
+// const runner = createAppleRunner({ appId, normalizeRows: true });
+// Or per operation: operation.rows({ normalizeRows: false, ... })
+```
 
 #### 4. Sections Operations
 Return grouped data with named sections (see [Protocol: sections](docs/protocol.md#sections)):
@@ -186,7 +224,7 @@ Return grouped data with named sections (see [Protocol: sections](docs/protocol.
 const closeTabs = operation.sections({
   name: 'closeTabs',
   input: z.object({ ids: z.array(z.string()) }),
-  output: z.string().transform(parseSections),
+  output: z.record(z.array(z.string())),
   script: ({ ids }) => `
     set closedList to {}
     set notFoundList to {}
@@ -216,6 +254,7 @@ const runner = createAppleRunner({
   // Behavior
   ensureAppReady: true,               // Launch app if not running
   validateByDefault: true,            // Validate input/output
+  normalizeRows: true,                // Normalize rows to schema (numbers/booleans/arrays/tuples/objects)
   maxRetries: 2,                      // Retry on timeout
   retryDelayMs: 1000,                 // Delay between retries
   
@@ -290,6 +329,43 @@ set __ARG__message to "Hello " & quote & "World" & quote & ""
 
 ## Advanced Usage
 
+### AppleScript-aware helper schemas
+The library ships Zod helpers tailored for AppleScript string outputs. They can be used directly in your schemas or with automatic normalization.
+
+- `asBoolean` — accepts boolean/numeric/string representations
+- `asNumber` — accepts number or numeric string
+- `asArray(item)` — accepts array or list string ("{...}" or CSV)
+- `asTuple([...items])` — accepts tuple or list string with fixed length
+- `asBounds` — shorthand for `[x, y, width, height]` using `asNumber`
+- `asRecord(shape)` — wraps boolean/number fields in a shape with `asBoolean`/`asNumber`
+
+Examples:
+
+```ts
+import { z } from 'zod';
+import { asBoolean, asNumber, asArray, asTuple, asBounds, asRecord } from '@avavilov/apple-script';
+
+// A single row item
+const Tab = asRecord({
+  id: z.string(),
+  title: z.string(),
+  active: z.boolean(),      // "1"/"true" → true
+  zoom: z.number(),         // "125" → 125
+  bounds: asBounds          // "{0, 0, 800, 600}" → [0,0,800,600]
+});
+
+// Whole rows output
+const TabsOutput = z.array(Tab);
+
+// Tuple example from a list string
+const XY = asTuple([asNumber, asNumber]); // "{10, 20}" → [10, 20]
+
+// Array-of-number from CSV/list
+const Numbers = asArray(asNumber); // "1,2,3" or "{1, 2, 3}" → [1,2,3]
+```
+
+Compatibility note: Helper schema behavior and automatic rows normalization rely on limited Zod introspection under the hood (reading common internal fields). This path is covered by unit tests in this repository. In rare cases after a Zod upgrade, normalization may gracefully degrade to a no-op for affected shapes (values remain strings) rather than throwing. You can always opt in to explicit Zod coercion or transform as a fallback.
+
 ### JavaScript Execution
 
 Execute JavaScript in browser contexts:
@@ -301,7 +377,7 @@ const executeJS = operation.scalar({
     js: z.string().describe('js') // Mark as JS code
   }),
   output: z.string(),
-  paramHints: {
+  hints: {
     js: { js: { maxLenKb: 512 } } // Limit size
   },
   script: ({ js }) => `
@@ -320,17 +396,9 @@ const title = await runner.run(executeJS, {
 Override timeouts per operation:
 
 ```typescript
-const longOperation = operation.scalar({
-  name: 'longOperation',
-  input: z.object({}),
-  output: z.string(),
-  timeoutSec: 30, // Override default
-  script: () => `...`
-});
-
-// Or at runtime
+// At runtime per call
 await runner.run(longOperation, {}, {
-  timeoutMs: 45000 // Controller timeout
+  controllerTimeoutMs: 45000 // Controller timeout
 });
 ```
 
@@ -388,7 +456,7 @@ The library follows a layered architecture:
 1. **User API Layer**: High-level functions (`createAppleRunner`, `operation.*`)
 2. **Runner Layer**: Orchestration, retries, hooks
 3. **Operations & Queue Layer**: Operation definitions, queue management, validation
-4. **Core Layer**: Script building, marshalling, [protocol](docs/protocol.md) parsing
+4. **Engine Layer**: Script building, marshalling, `engine/protocol` parsing
 5. **System Layer**: `osascript` execution via `child_process`
 
 ## Additional Documentation
