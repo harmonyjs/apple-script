@@ -1,5 +1,5 @@
 /**
- * @fileoverview Type definitions for the AppleRunner.
+ * @fileoverview Type definitions for the AppleRunner (public API).
  */
 import type { PayloadKind } from "../engine/protocol/constants.js";
 import type { OperationError } from "../operations/types.js";
@@ -26,39 +26,24 @@ import type { OperationError } from "../operations/types.js";
  */
 export interface RunnerConfig {
   appId: string;
-  /**
-   * Default AppleScript timeout in seconds (see DEFAULT_TIMEOUTS for fallback)
-   */
+  /** Default AppleScript timeout in seconds (see DEFAULT_TIMEOUTS for fallback) */
   defaultTimeoutSec?: number;
-  /**
-   * Default controller timeout in milliseconds (see DEFAULT_TIMEOUTS for fallback)
-   */
+  /** Default controller timeout in milliseconds (see DEFAULT_TIMEOUTS for fallback) */
   defaultControllerTimeoutMs?: number;
-  /**
-   * Per-payload-kind timeout override in seconds
-   */
+  /** Per-payload-kind timeout override in seconds */
   timeoutByKind?: Partial<Record<PayloadKind, number>>;
-  /**
-   * Ensure the target app is ready before executing (default: true)
-   */
+  /** Ensure the target app is ready before executing (default: true) */
   ensureAppReady?: boolean;
-  /**
-   * Whether to validate input/output by default in factories (default: true)
-   */
+  /** Whether to validate input/output by default in factories (default: true) */
   validateByDefault?: boolean;
   /**
    * Automatically normalize rows operation output to match schema types (numbers/booleans/arrays/tuples/objects)
    * before validation. Applies only to rows operations. Enabled by default.
    */
   normalizeRows?: boolean;
-  /**
-  * Number of retry attempts on retriable errors (default: 0).
-  * Only timeout errors are retried by default; validation/protocol errors are not retried.
-   */
+  /** Number of retry attempts on retriable errors (default: 0). */
   maxRetries?: number;
-  /**
-  * Delay between retries in milliseconds (default: 0ms).
-   */
+  /** Delay between retries in milliseconds (default: 0ms). */
   retryDelayMs?: number;
   debug?: (info: DebugInfo) => void;
   onResult?: (info: ResultInfo) => void;
@@ -130,26 +115,20 @@ export interface RunnerStats {
   successfulOperations: number;
   failedOperations: number;
   operationsByKind: Record<PayloadKind, number>;
-  /**
-   * Total wall time across all operations and retries, in milliseconds
-   */
+  /** Total wall time across all operations and retries, in milliseconds */
   totalExecutionTime: number;
   totalRetries: number;
 }
 
 /**
  * Options for creating a runner instance.
- *
- * @remarks
- * Creates a runner using the provided configuration type; alias of RunnerConfig for semantic clarity.
- *
  * @public
  */
 export interface CreateRunnerOptions extends RunnerConfig {}
 
 /**
- * @public
  * Type guard for successful RunResult.
+ * @public
  */
 export function isSuccess<T>(
   result: RunResult<T>,
@@ -158,8 +137,8 @@ export function isSuccess<T>(
 }
 
 /**
- * @public
  * Type guard for failed RunResult.
+ * @public
  */
 export function isError<T>(
   result: RunResult<T>,
@@ -168,48 +147,28 @@ export function isError<T>(
 }
 
 /**
- * @public
  * Returns data when the result is ok; otherwise throws the contained error.
+ * @public
  */
 export function unwrapResult<T>(result: RunResult<T>): T {
-  /**
-   * @example
-   * ```ts
-   * const data = unwrapResult(await runner.run(op, input))
-   * ```
-   */
   if (isSuccess(result)) return result.data;
   throw result.error;
 }
 
 /**
- * @public
  * Extracts data from a successful result, or undefined for errors.
+ * @public
  */
 export function getResultData<T>(result: RunResult<T>): T | undefined {
-  /**
-   * @example
-   * ```ts
-   * const r = await runner.run(op, input)
-   * const data = getResultData(r)
-   * ```
-   */
   return isSuccess(result) ? result.data : undefined;
 }
 
 /**
- * @public
  * Extracts error from a failed result, or undefined for successes.
+ * @public
  */
 export function getResultError<T>(
   result: RunResult<T>,
 ): OperationError | undefined {
-  /**
-   * @example
-   * ```ts
-   * const r = await runner.run(op, input)
-   * const err = getResultError(r)
-   * ```
-   */
   return isError(result) ? result.error : undefined;
 }

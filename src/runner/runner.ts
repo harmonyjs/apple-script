@@ -29,13 +29,13 @@ import type {
   RunOptions,
 } from "../operations/types.js";
 import type { RunnerConfig, RunResult, RunnerStats } from "./types.js";
-import { ExecutionPipeline } from "./execution-pipeline.js";
 import type { DebugInfo, ResultInfo, ErrorInfo } from "./types.js";
 import { extractErrorCode, unsafeCast } from "#shared/unsafe-type-casts.js";
 import { createErrorFromCode } from "../errors/index.js";
 import { createPublicErrorFromUnknown } from "#errors/factory.js";
 import { RunnerStatsManager } from "./runner-stats.js";
 import { isRetriableError, delay } from "./retry-policy.js";
+import { createProcessingPipeline, toProcessingConfig } from "./pipeline/index.js";
 
 /**
  * Executes operations against a target macOS application with validation, timeouts, retries, and hooks.
@@ -50,7 +50,7 @@ export class AppleRunner {
     onError: (error: ErrorInfo) => void;
   };
   private readonly queueManager: QueueManager;
-  private readonly pipeline: ExecutionPipeline;
+  private readonly pipeline: ReturnType<typeof createProcessingPipeline>;
   private readonly statsMgr = new RunnerStatsManager();
 
   constructor(config: RunnerConfig) {
@@ -83,15 +83,9 @@ export class AppleRunner {
       onError: onError ?? (() => {}),
     };
     this.queueManager = new QueueManager();
-    this.pipeline = new ExecutionPipeline({
-      appId: this.config.appId,
-      ensureAppReady: this.config.ensureAppReady,
-      validateByDefault: this.config.validateByDefault,
-      normalizeRows: this.config.normalizeRows,
-      defaultTimeoutSec: this.config.defaultTimeoutSec,
-      defaultControllerTimeoutMs: this.config.defaultControllerTimeoutMs,
-      timeoutByKind: this.config.timeoutByKind,
-    });
+    this.pipeline = createProcessingPipeline(
+      toProcessingConfig(this.config)
+    );
   }
 
   /**
@@ -197,13 +191,11 @@ export class AppleRunner {
       const tookMs = Date.now() - start;
       const response = parseProtocolResponse(result);
 
-  if (isSuccessResponse(response)) {
+      if (isSuccessResponse(response)) {
         const payload = response.payload;
-        let output: unknown = this.pipeline.parsePayload(def, payload);
-        output = this.pipeline.postProcessRows(def, output);
-        output = this.pipeline.validateOutputIfNeeded(
+        const output = this.pipeline.runPostProcessing(
           def,
-          output,
+          payload,
           validateOutput,
         );
 
@@ -215,9 +207,9 @@ export class AppleRunner {
           output,
           tookMs,
         } satisfies ResultInfo);
-  // WHY: After validation, `output` is guaranteed to match z.infer<TOutput>.
-  // Use centralized unsafeCast to localize the assertion.
-  return { ok: true, data: unsafeCast<z.infer<TOutput>>(output) };
+        // WHY: After validation, `output` is guaranteed to match z.infer<TOutput>.
+        // Use centralized unsafeCast to localize the assertion.
+        return { ok: true, data: unsafeCast<z.infer<TOutput>>(output) };
       }
 
       const err = createErrorFromCode(
@@ -226,7 +218,6 @@ export class AppleRunner {
         def.name,
         this.config.appId,
       );
-      // Import type adapter at the top of the file
       const opErr: OperationError = {
         message: err.message,
         opName: def.name,

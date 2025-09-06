@@ -24,6 +24,14 @@ This document summarizes the internal module boundaries and layering rules to ke
 - `src/normalization/` — Zod-aware schemas and data normalization used by the runner.
 
 - `src/runner/` — orchestration (AppleRunner), execution pipeline, retry policy, stats, and post-processing.
+  - Steps-based execution pipeline in `src/runner/steps/`:
+    - `input-validation.ts` — Validates input against operation's Zod schema
+    - `script-build.ts` — Builds AppleScript from operation definition and input
+    - `protocol-parse.ts` — Parses raw AppleScript output based on operation kind
+    - `rows-mapping.ts` — Maps parsed rows data to objects using operation schema
+    - `rows-normalization.ts` — Normalizes mapped row data to match schema types
+    - `output-validation.ts` — Validates parsed output against operation's schema
+  - Why: Each step has a single responsibility and stays <200 lines, improving readability and testability. The `ProcessingPipeline` composes these steps dynamically based on operation type.
 
 - `src/queue/` — queue implementation used by the runner.
 
