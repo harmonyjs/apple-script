@@ -9,7 +9,7 @@
  * We generate AppleScript literals that are assigned to variables in the
  * script prologue, then reference those variables by name in the script body.
  */
-import { MAX_SIZES } from "./constants.js";
+import { MAX_SIZES } from "./protocol/constants.js";
 
 /**
  * Parameter hint for special handling of certain parameter types.

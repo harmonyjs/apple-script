@@ -21,7 +21,7 @@ import {
   isTimeoutError,
   getUserFriendlyMessage,
 } from "./index.js";
-import { AS_ERROR_CODES } from "../core/constants.js";
+import { AS_ERROR_CODES } from "../engine/protocol/constants.js";
 
 test("errors", async (t) => {
   await t.test("AppleScriptError base class", async (t) => {

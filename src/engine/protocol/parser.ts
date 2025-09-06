@@ -16,7 +16,21 @@ import {
   RS,
   US,
 } from "./constants.js";
-import { InvalidActionCodeError } from "../errors/index.js";
+
+/**
+ * Error thrown when protocol parsing fails or produces an invalid value.
+ *
+ * @internal
+ */
+export class ProtocolParseError extends Error {
+  readonly opName?: string;
+
+  constructor(message: string, opts?: { opName?: string }) {
+    super(message);
+    this.name = "ProtocolParseError";
+    this.opName = opts?.opName;
+  }
+}
 
 /**
  * Raw response from AppleScript execution
@@ -159,17 +173,15 @@ export function parseScalar(payload: string): string {
  * Validates that it's one of the valid action codes (0, 1, 2).
  *
  * @param payload - Raw payload string
+ * @param ctx - Optional parsing context (e.g., operation name) used in error messages
  * @returns The action code
- * @throws Error if invalid action code
+ * @throws {ProtocolParseError} If the action code is invalid or unknown
  */
 export function parseAction(
   payload: string,
   ctx?: { opName?: string },
 ): ActionCode {
-  /**
-   * @remarks
-   * Valid codes are declared in {@link ACTION_CODES}. Unknown values raise {@link InvalidActionCodeError}.
-   */
+  // Accept only the known literal codes defined by the protocol.
   const code = payload?.trim();
   if (
     code === ACTION_CODES.FAILURE ||
@@ -178,7 +190,11 @@ export function parseAction(
   ) {
     return code;
   }
-  throw new InvalidActionCodeError(code ?? "", ctx?.opName ?? "unknown");
+  const op = ctx?.opName ? ` for operation ${ctx.opName}` : "";
+  throw new ProtocolParseError(
+    `Invalid action code: ${code ?? "<empty>"}${op}`,
+    { opName: ctx?.opName },
+  );
 }
 
 /**

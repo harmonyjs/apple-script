@@ -5,8 +5,8 @@
  * descriptions of AppleScript tasks with input/output validation.
  */
 import { z } from "zod";
-import type { PayloadKind } from "../core/constants.js";
-import type { ParamHint } from "../core/marshaller.js";
+import type { PayloadKind } from "../engine/protocol/constants.js";
+import type { ParamHint } from "../engine/params.js";
 
 /**
  * Script function that generates the AppleScript body.

@@ -22,7 +22,7 @@ import type {
   SectionsOperationDef,
 } from "./types.js";
 import type { ScriptFunction } from "./types.js";
-import type { ParamHint } from "../core/marshaller.js";
+import type { ParamHint } from "../engine/params.js";
 
 /**
  * Creates a low-level operation object from a full {@link OperationDef}.

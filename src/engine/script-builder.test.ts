@@ -11,7 +11,7 @@ import {
   hasReturnStatement,
   validateUserScript,
 } from "./script-builder.js";
-import { GS, RS, US, ACTION_CODES } from "./constants.js";
+import { GS, RS, US, ACTION_CODES } from "./protocol/constants.js";
 
 test("script-builder", async (t) => {
   await t.test("buildAppleScript", async (t) => {

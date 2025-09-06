@@ -107,9 +107,9 @@ export {
   ACTION_CODES,
   DEFAULT_TIMEOUTS,
   MAX_SIZES,
-} from "./core/constants.js";
+} from "./engine/protocol/constants.js";
 
-export type { PayloadKind, ActionCode } from "./core/constants.js";
+export type { PayloadKind, ActionCode } from "./engine/protocol/constants.js";
 
 // Error types
 export {
@@ -129,4 +129,4 @@ export {
 } from "./errors/index.js";
 
 // Marshaller types (for advanced users)
-export type { ParamHint, MarshalledParam } from "./core/marshaller.js";
+export type { ParamHint, MarshalledParam } from "./engine/params.js";

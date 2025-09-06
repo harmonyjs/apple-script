@@ -4,7 +4,7 @@
  * This module defines a hierarchy of error types that provide
  * detailed information about what went wrong during script execution.
  */
-import { AS_ERROR_CODES } from "../core/constants.js";
+import { AS_ERROR_CODES } from "../engine/protocol/constants.js";
 
 /**
  * Base error class for all AppleScript-related errors.

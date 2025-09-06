@@ -15,7 +15,8 @@ import {
   isSuccessResponse,
   isErrorResponse,
   getErrorMessage,
-} from "./protocol.js";
+} from "./parser.js";
+import type { RawResponse } from "./parser.js";
 import { GS, RS, US, ACTION_CODES, AS_ERROR_CODES } from "./constants.js";
 
 test("protocol", async (t) => {

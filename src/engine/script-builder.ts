@@ -17,7 +17,7 @@ import {
   PayloadKind,
   RS,
   US,
-} from "./constants.js";
+} from "./protocol/constants.js";
 import type { MarshalledParam } from "./marshaller.js";
 import { generatePrologue } from "./marshaller.js";
 

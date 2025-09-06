@@ -18,9 +18,9 @@
  * See also: {@link isSuccess}, {@link getResultData}, {@link unwrapResult}.
  */
 import { z } from "zod";
-import { DEFAULT_TIMEOUTS, PayloadKind } from "../core/constants.js";
-import { buildAppleScript } from "../core/script-builder.js";
-import { executeAppleScript } from "../core/executor.js";
+import { DEFAULT_TIMEOUTS, PayloadKind } from "../engine/protocol/constants.js";
+import { buildAppleScript } from "../engine/script-builder.js";
+import { executeAppleScript } from "../engine/executor.js";
 import {
   parseProtocolResponse,
   isSuccessResponse,
@@ -28,8 +28,8 @@ import {
   parseSections,
   parseScalar,
   parseAction,
-} from "../core/protocol.js";
-import { marshalParams } from "../core/marshaller.js";
+} from "../engine/protocol/parser.js";
+import { marshalParams } from "../engine/marshaller.js";
 import { QueueManager } from "../queue/queue-manager.js";
 import type {
   Operation,

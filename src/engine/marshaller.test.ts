@@ -14,7 +14,7 @@ import {
   marshalParams,
   generatePrologue,
 } from "./marshaller.js";
-import { MAX_SIZES } from "./constants.js";
+import { MAX_SIZES } from "./protocol/constants.js";
 
 test("marshaller", async (t) => {
   await t.test("asStringLiteral", async (t) => {
