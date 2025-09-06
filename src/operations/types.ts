@@ -149,6 +149,8 @@ export interface RowsOperationDef<
 > extends BaseOperationDef<"rows", TInput, TOutput> {
   columns?: string[];
   mapRow?: (cols: string[], rowIndex: number) => unknown;
+  /** Per-operation override for rows normalization (default: inherits runner.normalizeRows) */
+  normalizeRows?: boolean;
 }
 
 /**

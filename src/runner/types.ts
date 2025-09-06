@@ -47,6 +47,11 @@ export interface RunnerConfig {
    */
   validateByDefault?: boolean;
   /**
+   * Automatically normalize rows operation output to match schema types (numbers/booleans/arrays/tuples/objects)
+   * before validation. Applies only to rows operations. Enabled by default.
+   */
+  normalizeRows?: boolean;
+  /**
   * Number of retry attempts on retriable errors (default: 0).
   * Only timeout errors are retried by default; validation/protocol errors are not retried.
    */

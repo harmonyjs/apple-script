@@ -19,17 +19,8 @@
  */
 import { z } from "zod";
 import { DEFAULT_TIMEOUTS, PayloadKind } from "../engine/protocol/constants.js";
-import { buildAppleScript } from "../engine/script-builder.js";
 import { executeAppleScript } from "../engine/executor.js";
-import {
-  parseProtocolResponse,
-  isSuccessResponse,
-  parseRows,
-  parseSections,
-  parseScalar,
-  parseAction,
-} from "../engine/protocol/parser.js";
-import { marshalParams } from "../engine/marshaller.js";
+import { parseProtocolResponse, isSuccessResponse, ProtocolParseError } from "../engine/protocol/parser.js";
 import { QueueManager } from "../queue/queue-manager.js";
 import type {
   Operation,
@@ -37,24 +28,20 @@ import type {
   OperationError,
   RunOptions,
 } from "../operations/types.js";
-import {
-  isActionOperation,
-  isRowsOperation,
-  isScalarOperation,
-  isSectionsOperation,
-} from "../operations/types.js";
 import type { RunnerConfig, RunResult, RunnerStats } from "./types.js";
-import { mapRowsOutput } from "./map-rows.js";
+import { ExecutionPipeline } from "./execution-pipeline.js";
 import type { DebugInfo, ResultInfo, ErrorInfo } from "./types.js";
+import { extractErrorCode } from "../shared/type-adapters.js";
 import {
   createErrorFromCode,
-  InputValidationError,
   InvalidActionCodeError,
   InvalidReturnTypeError,
   MissingReturnError,
   OutputValidationError,
   ScriptError,
 } from "../errors/index.js";
+import { RunnerStatsManager } from "./runner-stats.js";
+import { isRetriableError, delay } from "./retry-policy.js";
 
 /**
  * Executes operations against a target macOS application with validation, timeouts, retries, and hooks.
@@ -69,19 +56,8 @@ export class AppleRunner {
     onError: (error: ErrorInfo) => void;
   };
   private readonly queueManager: QueueManager;
-  private stats = {
-    totalOperations: 0,
-    successfulOperations: 0,
-    failedOperations: 0,
-    operationsByKind: {
-      scalar: 0,
-      action: 0,
-      rows: 0,
-      sections: 0,
-    } as Record<PayloadKind, number>,
-    totalExecutionTime: 0,
-    totalRetries: 0,
-  };
+  private readonly pipeline: ExecutionPipeline;
+  private readonly statsMgr = new RunnerStatsManager();
 
   constructor(config: RunnerConfig) {
     const {
@@ -91,6 +67,7 @@ export class AppleRunner {
       timeoutByKind = {},
       ensureAppReady = true,
       validateByDefault = true,
+      normalizeRows = true,
       maxRetries = 0,
       retryDelayMs = 0,
       debug,
@@ -104,6 +81,7 @@ export class AppleRunner {
       timeoutByKind,
       ensureAppReady,
       validateByDefault,
+      normalizeRows,
       maxRetries,
       retryDelayMs,
       debug: debug ?? (() => {}),
@@ -111,6 +89,15 @@ export class AppleRunner {
       onError: onError ?? (() => {}),
     };
     this.queueManager = new QueueManager();
+    this.pipeline = new ExecutionPipeline({
+      appId: this.config.appId,
+      ensureAppReady: this.config.ensureAppReady,
+      validateByDefault: this.config.validateByDefault,
+      normalizeRows: this.config.normalizeRows,
+      defaultTimeoutSec: this.config.defaultTimeoutSec,
+      defaultControllerTimeoutMs: this.config.defaultControllerTimeoutMs,
+      timeoutByKind: this.config.timeoutByKind,
+    });
   }
 
   /**
@@ -130,30 +117,27 @@ export class AppleRunner {
     const def = operation.def;
     const startedAt = Date.now();
     let retryCount = 0;
-    this.stats.totalOperations += 1;
-    this.stats.operationsByKind[def.kind] += 1;
+    this.statsMgr.onStart(def.kind);
 
     while (retryCount <= this.config.maxRetries) {
       const res = await this.executeOperation(def, input, options, retryCount);
       const tookMs = Date.now() - startedAt;
-      this.stats.totalExecutionTime += tookMs;
 
       if (res.ok) {
-        this.stats.successfulOperations += 1;
+        this.statsMgr.onSuccess(tookMs);
         return { ok: true, data: res.data };
       }
 
       const shouldRetry =
-        this.isRetriableError(res.error) && retryCount < this.config.maxRetries;
+        isRetriableError(res.error) && retryCount < this.config.maxRetries;
       if (!shouldRetry) {
-        this.stats.failedOperations += 1;
+        this.statsMgr.onFailure(tookMs);
         return { ok: false, error: res.error };
       }
 
       retryCount += 1;
-      this.stats.totalRetries += 1;
-      if (this.config.retryDelayMs > 0)
-        await new Promise((r) => setTimeout(r, this.config.retryDelayMs));
+      this.statsMgr.onRetryAttempt();
+      await delay(this.config.retryDelayMs);
     }
 
     // Should not reach
@@ -185,38 +169,14 @@ export class AppleRunner {
       : (def.validateOutput ?? this.config.validateByDefault);
 
     try {
-      // Validate input
-      if (validateInput) {
-        const parse = (def.input as any).safeParse?.(input);
-        if (!parse?.success) {
-          throw new InputValidationError(
-            "Input validation failed",
-            (parse as any)?.error?.issues ?? [],
-            def.name,
-          );
-        }
-      }
+      // 1) Validate input
+      this.pipeline.validateInputIfNeeded(def, input, validateInput);
 
-      const params = marshalParams(input as any, def.hints ?? {});
-      const timeoutSec =
-        options?.timeoutSec ??
-        this.config.timeoutByKind[def.kind] ??
-        this.config.defaultTimeoutSec;
-      const controllerTimeoutMs =
-        options?.controllerTimeoutMs ?? this.config.defaultControllerTimeoutMs;
-      const script = buildAppleScript({
-        appId: this.config.appId,
-        kind: def.kind as PayloadKind,
-        userScript: def.script(
-          Object.fromEntries(
-            params.map((p) => [p.paramName, p.varName]),
-          ) as any,
-        ),
-        params,
-        timeoutSec,
-        ensureReady: this.config.ensureAppReady,
-      });
+      // 2) Build script context
+      const { params, timeoutSec, controllerTimeoutMs, script } =
+        this.pipeline.buildScriptContext(def, input, options);
 
+      // 3) Debug hook
       this.config.debug?.({
         opName: def.name,
         appId: this.config.appId,
@@ -243,32 +203,15 @@ export class AppleRunner {
       const tookMs = Date.now() - start;
       const response = parseProtocolResponse(result);
 
-      if (isSuccessResponse(response)) {
+  if (isSuccessResponse(response)) {
         const payload = response.payload;
-        let output: any;
-        if (isScalarOperation(def)) output = parseScalar(payload);
-        else if (isActionOperation(def))
-          output = parseAction(payload, { opName: def.name });
-        else if (isRowsOperation(def)) output = parseRows(payload);
-        else if (isSectionsOperation(def)) output = parseSections(payload);
-        else output = payload;
-
-        // Perform rows mapping BEFORE validation so it also applies when validation is disabled.
-        if (isRowsOperation(def) && Array.isArray(output)) {
-          output = mapRowsOutput(def as any, output as any);
-        }
-
-        if (validateOutput) {
-          const parsed = (def.output as any).safeParse?.(output);
-          if (!parsed?.success) {
-            throw new OutputValidationError(
-              "Output validation failed",
-              (parsed as any)?.error?.issues ?? [],
-              def.name,
-            );
-          }
-          output = parsed.data;
-        }
+        let output: unknown = this.pipeline.parsePayload(def, payload);
+        output = this.pipeline.postProcessRows(def, output);
+        output = this.pipeline.validateOutputIfNeeded(
+          def,
+          output,
+          validateOutput,
+        );
 
         this.config.onResult?.({
           opName: def.name,
@@ -278,7 +221,9 @@ export class AppleRunner {
           output,
           tookMs,
         } satisfies ResultInfo);
-        return { ok: true, data: output };
+        // WHY as any: TypeScript cannot infer the exact output type from the generic
+        // OperationDef. The output has already been validated by the pipeline.
+        return { ok: true, data: output as any };
       }
 
       const err = createErrorFromCode(
@@ -287,12 +232,13 @@ export class AppleRunner {
         def.name,
         this.config.appId,
       );
+      // Import type adapter at the top of the file
       const opErr: OperationError = {
         message: err.message,
         opName: def.name,
         appId: this.config.appId,
         kind: def.kind,
-        code: (err as any).code,
+        code: extractErrorCode(err),
         cause: err,
       };
       this.config.onError?.({
@@ -305,6 +251,17 @@ export class AppleRunner {
       return { ok: false, error: opErr };
     } catch (e: any) {
       let err: OperationError;
+      // Map internal protocol errors to public API errors
+      if (e instanceof ProtocolParseError) {
+        const mapped = new InvalidActionCodeError("", def.name);
+        err = {
+          message: mapped.message,
+          opName: def.name,
+          appId: this.config.appId,
+          kind: def.kind,
+          cause: mapped,
+        };
+      } else
       if (
         e instanceof MissingReturnError ||
         e instanceof InvalidReturnTypeError ||
@@ -339,17 +296,8 @@ export class AppleRunner {
     }
   }
 
-  private isRetriableError(_error: OperationError): boolean {
-    // Retry on timeouts; other errors are considered non-retriable by default
-    const c = _error.cause as any;
-    return (
-      c?.name === "TimeoutAppleEventError" ||
-      c?.name === "TimeoutOSAScriptError"
-    );
-  }
-
   getStats(): RunnerStats {
-    return this.stats;
+    return this.statsMgr.getStats();
   }
   clearQueue(): void {
     this.queueManager.clearQueue(this.config.appId);
