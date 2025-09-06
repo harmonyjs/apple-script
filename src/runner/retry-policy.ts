@@ -1,5 +1,5 @@
 import type { OperationError } from "../operations/types.js";
-import { hasProperty } from "../shared/type-adapters.js";
+import { hasProperty } from "#shared/type-adapters.js";
 
 /**
  * Default retry policy: retries only on AppleScript/controller timeouts.
@@ -7,9 +7,12 @@ import { hasProperty } from "../shared/type-adapters.js";
 export function isRetriableError(error: OperationError): boolean {
   // WHY: error.cause could be any type of object/error. We need to check if it has
   // a name property that matches our timeout error names.
-  const c = error.cause;
-  if (hasProperty(c, "name") && typeof c.name === "string") {
-    return c.name === "TimeoutAppleEventError" || c.name === "TimeoutOSAScriptError";
+  const cause = error.cause;
+  if (hasProperty(cause, "name")) {
+    const name = (cause as Record<string, unknown>).name;
+    if (typeof name === "string") {
+      return name === "TimeoutAppleEventError" || name === "TimeoutOSAScriptError";
+    }
   }
   return false;
 }
