@@ -178,7 +178,6 @@ const listTabsWithDomain = operation.rows({
 ```
 
 **Note**: Row mapping happens *before* output validation, ensuring consistent behavior regardless of validation settings. See [Troubleshooting](docs/troubleshooting.md#rows--objects-mapping-doesnt-work) for common issues.
-Note: Row mapping happens before output validation, ensuring consistent behavior regardless of validation settings. See Troubleshooting for common issues.
 
 ##### Automatic normalization (rows)
 After mapping rows to objects, the runner can automatically normalize stringly-typed values to match your output schema. This is a best-effort, schema-guided step that handles:
@@ -197,18 +196,19 @@ Example with AppleScript-aware helper schemas:
 
 ```ts
 import { z } from 'zod';
-import { operation, asRecord, asArray, asNumber, asBoolean } from '@avavilov/apple-script';
+import { operation, schemas as as } from '@avavilov/apple-script';
 
 const listTabs = operation.rows({
   name: 'listTabs',
   columns: ['id', 'url', 'title', 'active', 'bounds', 'indices'],
-  // asRecord wraps number/boolean fields to accept AppleScript string representations
-  output: z.array(asRecord({
+  // as.record wraps number/boolean fields to accept AppleScript string representations
+  // You may also use explicit helpers like as.boolean/as.number
+  output: z.array(as.record({
     id: z.string(),
     url: z.string().url(),
     title: z.string(),
-    active: z.boolean(),      // "true" → true, "0" → false
-    bounds: asArray(asNumber) // "{0, 0, 800, 600}" → [0, 0, 800, 600]
+    active: as.boolean,        // "true" → true, "0" → false
+    bounds: as.array(as.number) // "{0, 0, 800, 600}" → [0, 0, 800, 600]
   })).describe('List of tabs')
 });
 
@@ -329,7 +329,7 @@ set __ARG__message to "Hello " & quote & "World" & quote & ""
 
 ## Advanced Usage
 
-### AppleScript-aware helper schemas
+### AppleScript-aware helper schemas (stable public API)
 The library ships Zod helpers tailored for AppleScript string outputs. They can be used directly in your schemas or with automatic normalization.
 
 - `asBoolean` — accepts boolean/numeric/string representations
@@ -339,29 +339,37 @@ The library ships Zod helpers tailored for AppleScript string outputs. They can 
 - `asBounds` — shorthand for `[x, y, width, height]` using `asNumber`
 - `asRecord(shape)` — wraps boolean/number fields in a shape with `asBoolean`/`asNumber`
 
+Import from the root entrypoint:
+
+```ts
+import { schemas as as } from '@avavilov/apple-script';
+```
+
+These helpers are a stable part of the public API and will follow semver. Breaking changes, if any, will be released as a major version.
+
 Examples:
 
 ```ts
 import { z } from 'zod';
-import { asBoolean, asNumber, asArray, asTuple, asBounds, asRecord } from '@avavilov/apple-script';
+import { schemas as as } from '@avavilov/apple-script';
 
 // A single row item
-const Tab = asRecord({
+const Tab = as.record({
   id: z.string(),
   title: z.string(),
-  active: z.boolean(),      // "1"/"true" → true
-  zoom: z.number(),         // "125" → 125
-  bounds: asBounds          // "{0, 0, 800, 600}" → [0,0,800,600]
+  active: as.boolean,        // "1"/"true" → true
+  zoom: as.number,           // "125" → 125
+  bounds: as.bounds          // "{0, 0, 800, 600}" → [0,0,800,600]
 });
 
 // Whole rows output
 const TabsOutput = z.array(Tab);
 
 // Tuple example from a list string
-const XY = asTuple([asNumber, asNumber]); // "{10, 20}" → [10, 20]
+const XY = as.tuple([as.number, as.number]); // "{10, 20}" → [10, 20]
 
 // Array-of-number from CSV/list
-const Numbers = asArray(asNumber); // "1,2,3" or "{1, 2, 3}" → [1,2,3]
+const Numbers = as.array(as.number); // "1,2,3" or "{1, 2, 3}" → [1,2,3]
 ```
 
 Compatibility note: Helper schema behavior and automatic rows normalization rely on limited Zod introspection under the hood (reading common internal fields). This path is covered by unit tests in this repository. In rare cases after a Zod upgrade, normalization may gracefully degrade to a no-op for affected shapes (values remain strings) rather than throwing. You can always opt in to explicit Zod coercion or transform as a fallback.

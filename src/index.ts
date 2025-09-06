@@ -130,3 +130,14 @@ export {
 
 // Marshaller types (for advanced users)
 export type { ParamHint, MarshalledParam } from "./engine/params.js";
+
+// AppleScript-aware Zod helper schemas (public API)
+export {
+  asBoolean,
+  asNumber,
+  asArray,
+  asTuple,
+  asRecord,
+  asBounds,
+  schemas,
+} from "./normalization/schemas.js";
