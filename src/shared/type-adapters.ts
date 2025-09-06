@@ -63,7 +63,3 @@ export function safeArraySlice<T>(arr: unknown, start: number, end?: number): T[
   if (Array.isArray(arr)) return (arr as unknown[]).slice(start, end) as T[];
   return [];
 }
-
-export function testInvalidInput<T>(value: unknown): T {
-  return value as T;
-}
