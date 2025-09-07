@@ -48,7 +48,7 @@ export function asArray<T extends z.ZodTypeAny>(
     z
       .string()
       .transform((v) =>
-        parseAppleScriptList(v).map((p: string) => itemSchema.parse(p)),
+        parseAppleScriptList(v).map((p) => itemSchema.parse(p)),
       ),
   ]);
 }
@@ -88,27 +88,44 @@ export const asBounds = asTuple([
  * Other field types are kept as-is.
  * @public
  */
-export function asRecord<T extends z.ZodRawShape>(shape: T): z.ZodTypeAny {
+export function asRecord<T extends z.ZodRawShape>(
+  shape: T
+): z.ZodObject<{
+  [K in keyof T]: T[K] extends z.ZodNumber
+    ? typeof asNumber
+    : T[K] extends z.ZodBoolean
+    ? typeof asBoolean
+    : T[K];
+}> {
   const newShape: Record<string, z.ZodTypeAny> = {};
   for (const [key, schema] of Object.entries(shape)) {
-    const base: any = unwrapZodSchema(schema);
-    const ctor: string | undefined = base?.constructor?.name;
+    const base = unwrapZodSchema(schema);
+    const ctor = base?.constructor?.name;
     if (ctor === "ZodNumber") newShape[key] = asNumber;
     else if (ctor === "ZodBoolean") newShape[key] = asBoolean;
-    else {
-      // WHY as any: TypeScript cannot infer that non-wrapped schemas are valid ZodType instances.
-      // We're building a shape object for z.object() which accepts any ZodType as values.
-      newShape[key] = schema as any;
-    }
+    else newShape[key] = schema as z.ZodTypeAny;
   }
-  return z.object(newShape);
+  return z.object(newShape) as z.ZodObject<{
+    [K in keyof T]: T[K] extends z.ZodNumber
+      ? typeof asNumber
+      : T[K] extends z.ZodBoolean
+      ? typeof asBoolean
+      : T[K];
+  }>;
 }
 
 /**
  * Namespaced access to helper schemas.
  * @public
  */
-export const schemas = {
+export const schemas: {
+  readonly boolean: typeof asBoolean;
+  readonly number: typeof asNumber;
+  readonly array: typeof asArray;
+  readonly tuple: typeof asTuple;
+  readonly bounds: typeof asBounds;
+  readonly record: typeof asRecord;
+} = {
   boolean: asBoolean,
   number: asNumber,
   array: asArray,

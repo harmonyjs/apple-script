@@ -6,6 +6,9 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+### Fixed
+- **TypeScript Types**: Fixed loose typing in `schemas` export that required users to disable ESLint's `no-unsafe-*` rules. The `asRecord` function now returns a properly typed `z.ZodObject` instead of `z.ZodTypeAny`, preserving full type information. This allows consumers to use `schemas.record()` without TypeScript/ESLint warnings about unsafe operations.
+
 ## [0.2.0] - 2025-09-07
 
 ### Added
