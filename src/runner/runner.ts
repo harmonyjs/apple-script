@@ -20,7 +20,10 @@
 import { z } from "zod";
 import { DEFAULT_TIMEOUTS, PayloadKind } from "../engine/protocol/constants.js";
 import { executeAppleScript } from "../engine/executor.js";
-import { parseProtocolResponse, isSuccessResponse } from "../engine/protocol/parser.js";
+import {
+  parseProtocolResponse,
+  isSuccessResponse,
+} from "../engine/protocol/parser.js";
 import { QueueManager } from "../queue/queue-manager.js";
 import type {
   Operation,
@@ -35,7 +38,10 @@ import { createErrorFromCode } from "../errors/index.js";
 import { createPublicErrorFromUnknown } from "#errors/factory.js";
 import { RunnerStatsManager } from "./runner-stats.js";
 import { isRetriableError, delay } from "./retry-policy.js";
-import { createProcessingPipeline, toProcessingConfig } from "./pipeline/index.js";
+import {
+  createProcessingPipeline,
+  toProcessingConfig,
+} from "./pipeline/index.js";
 
 /**
  * Executes operations against a target macOS application with validation, timeouts, retries, and hooks.
@@ -83,16 +89,14 @@ export class AppleRunner {
       onError: onError ?? (() => {}),
     };
     this.queueManager = new QueueManager();
-    this.pipeline = createProcessingPipeline(
-      toProcessingConfig(this.config)
-    );
+    this.pipeline = createProcessingPipeline(toProcessingConfig(this.config));
   }
 
   /**
    * Runs a typed operation against the configured application.
    *
    * Contract:
-  * - Inputs: an {@link Operation} and its input shape (`z.infer` from the operation's input schema);
+   * - Inputs: an {@link Operation} and its input shape (`z.infer` from the operation's input schema);
    *   optional {@link RunOptions} for timeouts/validation overrides.
    * - Output: a {@link RunResult} with either parsed & validated data or a normalized error.
    * - Retries: by default only timeout errors are retried when `maxRetries > 0`; other errors are not retried.

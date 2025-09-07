@@ -24,9 +24,9 @@ function createMockContext(shouldValidate: boolean): PipelineContext {
       kind: "scalar",
       name: "test-operation",
       input: z.object({}),
-      output: z.object({ 
+      output: z.object({
         result: z.string(),
-        count: z.number() 
+        count: z.number(),
       }),
       script: () => "return 'test'",
     },
@@ -39,9 +39,9 @@ void test("OutputValidationStep", async (t) => {
     const step = new OutputValidationStep();
     const context = createMockContext(false);
     const output = { result: "test", count: 42 };
-    
+
     const result = step.execute(output, context);
-    
+
     assert.deepEqual(result, output);
   });
 
@@ -49,9 +49,9 @@ void test("OutputValidationStep", async (t) => {
     const step = new OutputValidationStep();
     const context = createMockContext(true);
     const output = { result: "test", count: 42 };
-    
+
     const result = step.execute(output, context);
-    
+
     assert.deepEqual(result, output);
   });
 
@@ -59,10 +59,10 @@ void test("OutputValidationStep", async (t) => {
     const step = new OutputValidationStep();
     const context = createMockContext(true);
     const output = { result: "test", count: "not-a-number" }; // Should be number, not string
-    
+
     assert.throws(
       () => step.execute(output, context),
-      (error: unknown) => error instanceof OutputValidationError
+      (error: unknown) => error instanceof OutputValidationError,
     );
   });
 
@@ -70,7 +70,7 @@ void test("OutputValidationStep", async (t) => {
     const step = new OutputValidationStep();
     const context = createMockContext(true);
     const output = { result: "test", count: "invalid" };
-    
+
     try {
       step.execute(output, context);
       assert.fail("Expected error to be thrown");
@@ -84,26 +84,26 @@ void test("OutputValidationStep", async (t) => {
     const step = new OutputValidationStep();
     const context = createMockContext(true);
     const output = { result: "test" }; // Missing 'count' field
-    
+
     assert.throws(
       () => step.execute(output, context),
-      (error: unknown) => error instanceof OutputValidationError
+      (error: unknown) => error instanceof OutputValidationError,
     );
   });
 
   await t.test("validates extra fields according to schema", () => {
     const step = new OutputValidationStep();
     const context = createMockContext(true);
-    const output = { 
-      result: "test", 
-      count: 42, 
-      extra: "should-be-ignored-or-cause-error" 
+    const output = {
+      result: "test",
+      count: 42,
+      extra: "should-be-ignored-or-cause-error",
     };
-    
+
     // Behavior depends on Zod schema strictness
     // This test ensures the validation step is called
     const result = step.execute(output, context);
-    
+
     // If no error is thrown, validation passed (Zod allows extra fields by default)
     assert(result !== undefined);
   });
@@ -112,9 +112,9 @@ void test("OutputValidationStep", async (t) => {
     const step = new OutputValidationStep();
     const context = createMockContext(true);
     const output = { result: "test", count: 42 };
-    
+
     const result = step.execute(output, context);
-    
+
     // Should return the validated data (potentially transformed by Zod)
     assert(typeof result === "object");
     assert.equal((result as any).result, "test");
@@ -124,15 +124,15 @@ void test("OutputValidationStep", async (t) => {
   await t.test("handles null and undefined gracefully in validation", () => {
     const step = new OutputValidationStep();
     const context = createMockContext(true);
-    
+
     assert.throws(
       () => step.execute(null, context),
-      (error: unknown) => error instanceof OutputValidationError
+      (error: unknown) => error instanceof OutputValidationError,
     );
-    
+
     assert.throws(
       () => step.execute(undefined, context),
-      (error: unknown) => error instanceof OutputValidationError
+      (error: unknown) => error instanceof OutputValidationError,
     );
   });
 

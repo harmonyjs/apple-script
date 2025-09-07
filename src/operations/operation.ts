@@ -106,7 +106,7 @@ export interface ScalarOptions<
  *   `,
  * })
  *
-* const runner = createAppleRunner({ appId: 'com.apple.Safari' })
+ * const runner = createAppleRunner({ appId: 'com.apple.Safari' })
  * const res = await runner.run(op, {})
  * ```
  *
@@ -204,7 +204,7 @@ export type ActionOutputSchema = typeof ACTION_OUTPUT_SCHEMA;
  *   `,
  * })
  *
-* const runner = createAppleRunner({ appId: 'com.apple.Safari' })
+ * const runner = createAppleRunner({ appId: 'com.apple.Safari' })
  * const result = await runner.run(click, { title: 'OK' })
  * ```
  *

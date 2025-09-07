@@ -30,7 +30,9 @@ export function hasProperty<K extends PropertyKey>(
   obj: unknown,
   key: K,
 ): obj is Record<K, unknown> {
-  return obj !== null && obj !== undefined && typeof obj === "object" && key in obj;
+  return (
+    obj !== null && obj !== undefined && typeof obj === "object" && key in obj
+  );
 }
 
 /**
@@ -48,7 +50,10 @@ export function safeParseWithSchema<T extends z.ZodType>(
 }
 
 /** Extracts Zod issues from an unknown error object (best-effort). @internal */
-export function extractZodIssues(parseResult: { success: false; error?: unknown }): unknown[] {
+export function extractZodIssues(parseResult: {
+  success: false;
+  error?: unknown;
+}): unknown[] {
   const error = parseResult.error;
   if (error && typeof error === "object" && "issues" in error) {
     const issues = (error as { issues?: unknown }).issues;
@@ -58,7 +63,10 @@ export function extractZodIssues(parseResult: { success: false; error?: unknown 
 }
 
 /** Indexes into a record with a dynamic key. @internal */
-export function getObjectProperty<T = unknown>(obj: Record<string, unknown>, key: string): T {
+export function getObjectProperty<T = unknown>(
+  obj: Record<string, unknown>,
+  key: string,
+): T {
   return obj[key] as T;
 }
 
@@ -68,7 +76,10 @@ export function extractErrorCode(error: unknown): number | undefined {
     const code = (error as { code?: unknown }).code;
     if (typeof code === "number") return code;
   }
-  if (hasProperty(error, "cause") && hasProperty((error as { cause?: unknown }).cause, "code" as const)) {
+  if (
+    hasProperty(error, "cause") &&
+    hasProperty((error as { cause?: unknown }).cause, "code" as const)
+  ) {
     const code = (error as { cause?: { code?: unknown } }).cause?.code;
     if (typeof code === "number") return code;
   }
@@ -76,8 +87,12 @@ export function extractErrorCode(error: unknown): number | undefined {
 }
 
 /** Minimal shape check for operations with optional normalizeRows flag. @internal */
-export function getNormalizeRowsSetting(def: unknown, defaultValue: boolean): boolean {
-  if (hasProperty(def, "normalizeRows")) return Boolean((def as { normalizeRows?: unknown }).normalizeRows);
+export function getNormalizeRowsSetting(
+  def: unknown,
+  defaultValue: boolean,
+): boolean {
+  if (hasProperty(def, "normalizeRows"))
+    return Boolean((def as { normalizeRows?: unknown }).normalizeRows);
   return defaultValue;
 }
 
@@ -88,6 +103,8 @@ export function getNormalizeRowsSetting(def: unknown, defaultValue: boolean): bo
  * at runtime from marshalled params.
  * @internal
  */
-export function buildVarsMap(params: Array<{ paramName: string; varName: string }>): Record<string, string> {
+export function buildVarsMap(
+  params: Array<{ paramName: string; varName: string }>,
+): Record<string, string> {
   return Object.fromEntries(params.map((p) => [p.paramName, p.varName]));
 }

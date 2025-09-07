@@ -26,7 +26,10 @@ function safeArraySlice<T>(arr: unknown, start = 0, end?: number): T[] {
  * Normalize mapped rows (arrays or objects) according to the Zod output element schema.
  * Safe by default: only coerces when target type is clearly number/boolean/array/tuple/object.
  */
-export function normalizeRowsToSchema(def: { output: unknown }, rows: unknown[]): unknown[] {
+export function normalizeRowsToSchema(
+  def: { output: unknown },
+  rows: unknown[],
+): unknown[] {
   try {
     const outSchema = (def as any).output as unknown;
     // Extract array element schema via adapter

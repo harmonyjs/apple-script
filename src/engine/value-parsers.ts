@@ -27,7 +27,10 @@ export function coerceToBoolean(value: unknown): unknown {
 
 export function parseAppleScriptList(input: string): string[] {
   let s = input.trim();
-  if ((s.startsWith("{") && s.endsWith("}")) || (s.startsWith("[") && s.endsWith("]"))) {
+  if (
+    (s.startsWith("{") && s.endsWith("}")) ||
+    (s.startsWith("[") && s.endsWith("]"))
+  ) {
     s = s.slice(1, -1);
   }
   return s
@@ -35,7 +38,10 @@ export function parseAppleScriptList(input: string): string[] {
     .map((v) => v.trim())
     .filter((v) => v.length > 0)
     .map((v) => {
-      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+      if (
+        (v.startsWith('"') && v.endsWith('"')) ||
+        (v.startsWith("'") && v.endsWith("'"))
+      ) {
         return v.slice(1, -1);
       }
       return v;

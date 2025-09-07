@@ -9,18 +9,20 @@ import type { PipelineContext } from "../pipeline/types.js";
 
 // Helper to create mock context with normalization settings
 function createMockContext(
-  globalNormalizeRows = true, 
-  operationNormalizeRows?: boolean
+  globalNormalizeRows = true,
+  operationNormalizeRows?: boolean,
 ): PipelineContext {
   const operation: any = {
     kind: "rows",
     name: "test-rows-operation",
     input: z.object({}),
-    output: z.array(z.object({ 
-      id: z.string(), 
-      count: z.number(),  // Will test normalization to number
-      active: z.boolean() // Will test normalization to boolean
-    })),
+    output: z.array(
+      z.object({
+        id: z.string(),
+        count: z.number(), // Will test normalization to number
+        active: z.boolean(), // Will test normalization to boolean
+      }),
+    ),
     script: () => "return []",
   };
 
@@ -52,12 +54,12 @@ void test("RowsNormalizationStep", async (t) => {
       { id: "1", count: "42", active: "true" },
       { id: "2", count: "24", active: "false" },
     ];
-    
+
     const result = step.execute(data, context);
-    
+
     assert(Array.isArray(result));
     assert.equal(result.length, 2);
-    
+
     // Should be normalized (exact behavior depends on normalizeRowsToSchema implementation)
     // At minimum, the function should be called with correct parameters
     assert(result !== data); // Should be a new array/modified data
@@ -66,12 +68,10 @@ void test("RowsNormalizationStep", async (t) => {
   await t.test("skips normalization when global normalizeRows is false", () => {
     const step = new RowsNormalizationStep();
     const context = createMockContext(false); // Global: false, Operation: undefined
-    const data = [
-      { id: "1", count: "42", active: "true" },
-    ];
-    
+    const data = [{ id: "1", count: "42", active: "true" }];
+
     const result = step.execute(data, context);
-    
+
     // Should return data unchanged
     assert.deepEqual(result, data);
   });
@@ -79,12 +79,10 @@ void test("RowsNormalizationStep", async (t) => {
   await t.test("operation normalizeRows=true overrides global false", () => {
     const step = new RowsNormalizationStep();
     const context = createMockContext(false, true); // Global: false, Operation: true
-    const data = [
-      { id: "1", count: "42", active: "true" },
-    ];
-    
+    const data = [{ id: "1", count: "42", active: "true" }];
+
     const result = step.execute(data, context);
-    
+
     // Should normalize despite global setting being false
     assert(result !== data); // Should be processed
   });
@@ -92,12 +90,10 @@ void test("RowsNormalizationStep", async (t) => {
   await t.test("operation normalizeRows=false overrides global true", () => {
     const step = new RowsNormalizationStep();
     const context = createMockContext(true, false); // Global: true, Operation: false
-    const data = [
-      { id: "1", count: "42", active: "true" },
-    ];
-    
+    const data = [{ id: "1", count: "42", active: "true" }];
+
     const result = step.execute(data, context);
-    
+
     // Should not normalize despite global setting being true
     assert.deepEqual(result, data);
   });
@@ -106,9 +102,9 @@ void test("RowsNormalizationStep", async (t) => {
     const step = new RowsNormalizationStep();
     const context = createMockContext(true);
     const data: unknown[] = [];
-    
+
     const result = step.execute(data, context);
-    
+
     assert(Array.isArray(result));
     assert.equal(result.length, 0);
   });
@@ -121,9 +117,9 @@ void test("RowsNormalizationStep", async (t) => {
       { id: "second", count: "2", active: "false" },
       { id: "third", count: "3", active: "true" },
     ];
-    
+
     const result = step.execute(data, context);
-    
+
     assert(Array.isArray(result));
     assert.equal(result.length, 3);
     // Order should be preserved (exact values depend on normalization implementation)
@@ -132,16 +128,19 @@ void test("RowsNormalizationStep", async (t) => {
     assert.equal((result[2] as any).id, "third");
   });
 
-  await t.test("uses global setting when operation setting is undefined", () => {
-    const step = new RowsNormalizationStep();
-    const context = createMockContext(true); // Global: true, Operation: undefined
-    const data = [{ id: "1", count: "42", active: "true" }];
-    
-    const result = step.execute(data, context);
-    
-    // Should use global setting (true) when operation setting is undefined
-    assert(result !== data); // Should be processed
-  });
+  await t.test(
+    "uses global setting when operation setting is undefined",
+    () => {
+      const step = new RowsNormalizationStep();
+      const context = createMockContext(true); // Global: true, Operation: undefined
+      const data = [{ id: "1", count: "42", active: "true" }];
+
+      const result = step.execute(data, context);
+
+      // Should use global setting (true) when operation setting is undefined
+      assert(result !== data); // Should be processed
+    },
+  );
 
   await t.test("has correct step name", () => {
     const step = new RowsNormalizationStep();

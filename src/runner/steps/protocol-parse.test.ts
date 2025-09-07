@@ -8,7 +8,9 @@ import { ProtocolParseStep } from "./protocol-parse.js";
 import type { PipelineContext } from "../pipeline/types.js";
 
 // Helper to create mock context for different operation kinds
-function createMockContext(kind: "scalar" | "action" | "rows" | "sections"): PipelineContext {
+function createMockContext(
+  kind: "scalar" | "action" | "rows" | "sections",
+): PipelineContext {
   return {
     config: {
       appId: "com.example.test",
@@ -35,9 +37,9 @@ void test("ProtocolParseStep", async (t) => {
     const step = new ProtocolParseStep();
     const context = createMockContext("scalar");
     const payload = "test-scalar-value";
-    
+
     const result = step.execute(payload, context);
-    
+
     assert.equal(result, "test-scalar-value");
   });
 
@@ -45,9 +47,9 @@ void test("ProtocolParseStep", async (t) => {
     const step = new ProtocolParseStep();
     const context = createMockContext("action");
     const payload = "action-result";
-    
+
     const result = step.execute(payload, context);
-    
+
     // parseAction should handle the payload (though implementation may vary)
     assert(result !== undefined);
   });
@@ -57,9 +59,9 @@ void test("ProtocolParseStep", async (t) => {
     const context = createMockContext("rows");
     // Mock rows format: rows separated by Record Separator (RS), fields by Unit Separator (US)
     const payload = "row1col1\u001Frow1col2\u001Erow2col1\u001Frow2col2";
-    
+
     const result = step.execute(payload, context);
-    
+
     assert(Array.isArray(result), "Should return array for rows");
   });
 
@@ -68,9 +70,9 @@ void test("ProtocolParseStep", async (t) => {
     const context = createMockContext("sections");
     // Mock sections format with Group Separator (GS)
     const payload = "section1\u001Dsection2\u001Dsection3";
-    
+
     const result = step.execute(payload, context);
-    
+
     assert(Array.isArray(result), "Should return array for sections");
   });
 
@@ -85,9 +87,9 @@ void test("ProtocolParseStep", async (t) => {
       },
     };
     const payload = "unchanged-payload";
-    
+
     const result = step.execute(payload, context);
-    
+
     assert.equal(result, "unchanged-payload");
   });
 
@@ -100,9 +102,9 @@ void test("ProtocolParseStep", async (t) => {
     const step = new ProtocolParseStep();
     const context = createMockContext("scalar");
     const payload = "";
-    
+
     const result = step.execute(payload, context);
-    
+
     assert.equal(result, "");
   });
 });

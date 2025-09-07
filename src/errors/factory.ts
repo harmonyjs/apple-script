@@ -17,16 +17,9 @@ export function createErrorFromCode(
 ): AppleScriptError {
   switch (code) {
     case AS_ERROR_CODES.TIMEOUT_APPLE_EVENT:
-      return new TimeoutAppleEventError(
-        undefined,
-        appId,
-        operationName,
-      );
+      return new TimeoutAppleEventError(undefined, appId, operationName);
     case AS_ERROR_CODES.MISSING_RETURN:
-      return new MissingReturnError(
-        undefined,
-        operationName,
-      );
+      return new MissingReturnError(undefined, operationName);
     case AS_ERROR_CODES.INVALID_ACTION_CODE:
       return new InvalidActionCodeError("unknown", operationName);
     case AS_ERROR_CODES.INVALID_RETURN_TYPE_ROWS:
@@ -55,7 +48,10 @@ export function isAppleScriptError(error: unknown): error is AppleScriptError {
 export function isTimeoutError(
   error: unknown,
 ): error is TimeoutAppleEventError | TimeoutOSAScriptError {
-  return error instanceof TimeoutAppleEventError || error instanceof TimeoutOSAScriptError;
+  return (
+    error instanceof TimeoutAppleEventError ||
+    error instanceof TimeoutOSAScriptError
+  );
 }
 
 /**
@@ -128,6 +124,7 @@ export function createPublicErrorFromUnknown(
   }
 
   // Fallback: wrap unknowns into a generic script error with code -1
-  const message = error instanceof Error ? error.message : getUserFriendlyMessage(error);
+  const message =
+    error instanceof Error ? error.message : getUserFriendlyMessage(error);
   return new ScriptError(message, -1, ctx.operationName, message);
 }

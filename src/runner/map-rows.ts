@@ -36,42 +36,46 @@ export function mapRowsOutput(def: RowsLikeDef, rows: string[][]): unknown[] {
   let keys: string[] | undefined;
   try {
     const outSchema: any = (def as any).output;
-    
+
     // For ZodArray, the element is in outSchema.element or outSchema._def.type
     let el: any = outSchema?.element;
     if (!el && outSchema?._def?.type) {
       el = outSchema._def.type;
     }
-    
+
     if (el) {
       // Try multiple known places where shape may live across Zod versions
       const candidates: any[] = [];
-      
+
       // For ZodObject, shape can be in _def.shape() or _def.shape
       if (el._def) {
-        if (typeof el._def.shape === 'function') {
-          try { candidates.push(el._def.shape()); } catch {}
-        } else if (el._def.shape && typeof el._def.shape === 'object') {
+        if (typeof el._def.shape === "function") {
+          try {
+            candidates.push(el._def.shape());
+          } catch {}
+        } else if (el._def.shape && typeof el._def.shape === "object") {
           candidates.push(el._def.shape);
         }
       }
-      
+
       // Also try direct .shape property
-      if (typeof el.shape === 'function') {
-        try { candidates.push(el.shape()); } catch {}
-      } else if (el.shape && typeof el.shape === 'object') {
+      if (typeof el.shape === "function") {
+        try {
+          candidates.push(el.shape());
+        } catch {}
+      } else if (el.shape && typeof el.shape === "object") {
         candidates.push(el.shape);
       }
-      
+
       for (const s of candidates) {
-        if (s && typeof s === 'object') { 
+        if (s && typeof s === "object") {
           keys = Object.keys(s);
           break;
         }
       }
-      
+
       // Fallback via keyof
-      if (!keys && typeof el.keyof === 'function') {
+      if (!keys && typeof el.keyof === "function") {
         try {
           const keyEnum = el.keyof();
           const values: any = keyEnum?.options ?? keyEnum?._def?.values;

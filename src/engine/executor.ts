@@ -111,11 +111,21 @@ export async function executeAppleScript(
     };
   } catch (e: unknown) {
     // Use centralized helpers for property access
-    const code = hasProperty(e, "code") ? getObjectProperty<number | string>(e as Record<string, unknown>, "code") : undefined;
-    const signal = hasProperty(e, "signal") ? getObjectProperty<string>(e as Record<string, unknown>, "signal") : undefined;
-    const message = hasProperty(e, "message") ? getObjectProperty<string>(e as Record<string, unknown>, "message") : "Unknown osascript error";
-    const stdout = hasProperty(e, "stdout") ? getObjectProperty<string>(e as Record<string, unknown>, "stdout") : "";
-    const stderr = hasProperty(e, "stderr") ? getObjectProperty<string>(e as Record<string, unknown>, "stderr") : "";
+    const code = hasProperty(e, "code")
+      ? getObjectProperty<number | string>(e as Record<string, unknown>, "code")
+      : undefined;
+    const signal = hasProperty(e, "signal")
+      ? getObjectProperty<string>(e as Record<string, unknown>, "signal")
+      : undefined;
+    const message = hasProperty(e, "message")
+      ? getObjectProperty<string>(e as Record<string, unknown>, "message")
+      : "Unknown osascript error";
+    const stdout = hasProperty(e, "stdout")
+      ? getObjectProperty<string>(e as Record<string, unknown>, "stdout")
+      : "";
+    const stderr = hasProperty(e, "stderr")
+      ? getObjectProperty<string>(e as Record<string, unknown>, "stderr")
+      : "";
     const exitCode = typeof code === "number" ? code : null;
 
     // Handle timeout specifically

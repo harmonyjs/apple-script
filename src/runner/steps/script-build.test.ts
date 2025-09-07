@@ -8,7 +8,10 @@ import { ScriptBuildStep } from "./script-build.js";
 import type { PipelineContext } from "../pipeline/types.js";
 
 // Helper to create mock context
-function createMockContext(options?: { timeoutSec?: number; controllerTimeoutMs?: number }): PipelineContext {
+function createMockContext(options?: {
+  timeoutSec?: number;
+  controllerTimeoutMs?: number;
+}): PipelineContext {
   return {
     config: {
       appId: "com.example.test",
@@ -40,9 +43,9 @@ void test("ScriptBuildStep", async (t) => {
     const step = new ScriptBuildStep();
     const context = createMockContext();
     const input = { value: "test-input" };
-    
+
     const result = step.execute(input, context);
-    
+
     assert(typeof result === "object");
     assert(Array.isArray(result.params));
     assert(typeof result.timeoutSec === "number");
@@ -54,9 +57,9 @@ void test("ScriptBuildStep", async (t) => {
     const step = new ScriptBuildStep();
     const context = createMockContext();
     const input = { value: "test" };
-    
+
     const result = step.execute(input, context);
-    
+
     // Should use timeoutByKind.scalar = 10, not defaultTimeoutSec = 30
     assert.equal(result.timeoutSec, 10);
   });
@@ -65,9 +68,9 @@ void test("ScriptBuildStep", async (t) => {
     const step = new ScriptBuildStep();
     const context = createMockContext({ timeoutSec: 60 });
     const input = { value: "test" };
-    
+
     const result = step.execute(input, context);
-    
+
     // Should use options.timeoutSec = 60
     assert.equal(result.timeoutSec, 60);
   });
@@ -76,9 +79,9 @@ void test("ScriptBuildStep", async (t) => {
     const step = new ScriptBuildStep();
     const context = createMockContext({ controllerTimeoutMs: 10000 });
     const input = { value: "test" };
-    
+
     const result = step.execute(input, context);
-    
+
     assert.equal(result.controllerTimeoutMs, 10000);
   });
 
@@ -86,9 +89,9 @@ void test("ScriptBuildStep", async (t) => {
     const step = new ScriptBuildStep();
     const context = createMockContext();
     const input = { value: "test" };
-    
+
     const result = step.execute(input, context);
-    
+
     assert.equal(result.controllerTimeoutMs, 5000);
   });
 
@@ -96,11 +99,11 @@ void test("ScriptBuildStep", async (t) => {
     const step = new ScriptBuildStep();
     const context = createMockContext();
     const input = { value: "test-value" };
-    
+
     const result = step.execute(input, context);
-    
+
     assert(result.params.length > 0);
-    const valueParam = result.params.find(p => p.varName === "value");
+    const valueParam = result.params.find((p) => p.varName === "value");
     assert(valueParam, "Should have 'value' parameter");
   });
 
@@ -108,9 +111,9 @@ void test("ScriptBuildStep", async (t) => {
     const step = new ScriptBuildStep();
     const context = createMockContext();
     const input = { value: "test" };
-    
+
     const result = step.execute(input, context);
-    
+
     assert(typeof result.script === "string");
     assert(result.script.length > 0);
     assert(result.script.includes("com.example.test"), "Should include app ID");

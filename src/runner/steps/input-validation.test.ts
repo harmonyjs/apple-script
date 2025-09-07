@@ -36,9 +36,9 @@ void test("InputValidationStep", async (t) => {
     const step = new InputValidationStep();
     const context = createMockContext(false);
     const input = { value: "test" };
-    
+
     const result = step.execute(input, context);
-    
+
     assert.deepEqual(result, input);
   });
 
@@ -46,9 +46,9 @@ void test("InputValidationStep", async (t) => {
     const step = new InputValidationStep();
     const context = createMockContext(true);
     const input = { value: "test" };
-    
+
     const result = step.execute(input, context);
-    
+
     assert.deepEqual(result, input);
   });
 
@@ -56,10 +56,10 @@ void test("InputValidationStep", async (t) => {
     const step = new InputValidationStep();
     const context = createMockContext(true);
     const input = { value: 123 }; // Should be string, not number
-    
+
     assert.throws(
       () => step.execute(input, context),
-      (error: unknown) => error instanceof InputValidationError
+      (error: unknown) => error instanceof InputValidationError,
     );
   });
 
@@ -67,7 +67,7 @@ void test("InputValidationStep", async (t) => {
     const step = new InputValidationStep();
     const context = createMockContext(true);
     const input = { value: 123 };
-    
+
     try {
       step.execute(input, context);
       assert.fail("Expected error to be thrown");

@@ -5,7 +5,8 @@ function compilePatterns(raw: string | undefined): RegExp[] {
   if (!raw) return [];
   const val = raw.trim();
   if (!val) return [];
-  if (val === "1" || val.toLowerCase() === "true" || val === "*") return [/^.*/];
+  if (val === "1" || val.toLowerCase() === "true" || val === "*")
+    return [/^.*/];
   const parts = val.split(/[\s,]+/).filter(Boolean);
   const regs = parts.map((p) => {
     const esc = p.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
@@ -29,7 +30,11 @@ export function createDebug(ns: string) {
     const formatted = args.map((a) =>
       typeof a === "string"
         ? a
-        : inspect(a, { colors: process.stderr.isTTY, depth: 6, maxArrayLength: 50 }),
+        : inspect(a, {
+            colors: process.stderr.isTTY,
+            depth: 6,
+            maxArrayLength: 50,
+          }),
     );
     // eslint-disable-next-line no-console -- debug channel
     console.error(`[${time}] ${ns}:`, ...formatted);
@@ -47,9 +52,8 @@ export function describeSchema(s: unknown): string {
         def = maybe as Record<string, unknown>;
       }
     }
-    const tname = def && hasProperty(def, "typeName")
-      ? String(def.typeName)
-      : undefined;
+    const tname =
+      def && hasProperty(def, "typeName") ? String(def.typeName) : undefined;
     const keys = def ? Object.keys(def as object) : [];
     return `${ctor}${tname ? `/${tname}` : ""}${keys.length ? ` defKeys=${keys.join(",")}` : ""}`;
   } catch {

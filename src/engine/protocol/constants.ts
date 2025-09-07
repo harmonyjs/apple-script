@@ -172,7 +172,7 @@ export const DEFAULT_TIMEOUTS = {
 
 /**
  * Maximum sizes for various inputs
- * 
+ *
  * Notes on limits:
  * - If string/array limits are exceeded, marshalling functions will throw an Error
  *   describing the exceeded limit. This happens before AppleScript execution.

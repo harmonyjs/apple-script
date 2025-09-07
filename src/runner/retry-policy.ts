@@ -11,7 +11,9 @@ export function isRetriableError(error: OperationError): boolean {
   if (hasProperty(cause, "name")) {
     const name = (cause as Record<string, unknown>).name;
     if (typeof name === "string") {
-      return name === "TimeoutAppleEventError" || name === "TimeoutOSAScriptError";
+      return (
+        name === "TimeoutAppleEventError" || name === "TimeoutOSAScriptError"
+      );
     }
   }
   return false;
