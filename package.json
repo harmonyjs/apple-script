@@ -16,8 +16,8 @@
     "#engine/*": "./dist/engine/*",
     "#errors/*": "./dist/errors/*",
     "#runner/*": "./dist/runner/*",
-    "#ops/*": "./dist/operations/*",
-    "#norm/*": "./dist/normalization/*",
+    "#operations/*": "./dist/operations/*",
+    "#normalization/*": "./dist/normalization/*",
     "#queue/*": "./dist/queue/*",
     "#shared/*": "./dist/shared/*",
     "#root/*": "./dist/*"

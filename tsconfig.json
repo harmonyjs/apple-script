@@ -52,8 +52,8 @@
       "#engine/*": ["src/engine/*"],
       "#errors/*": ["src/errors/*"],
       "#runner/*": ["src/runner/*"],
-      "#ops/*": ["src/operations/*"],
-      "#norm/*": ["src/normalization/*"],
+      "#operations/*": ["src/operations/*"],
+      "#normalization/*": ["src/normalization/*"],
       "#queue/*": ["src/queue/*"],
       "#shared/*": ["src/shared/*"],
       "#root/*": ["src/*"]
