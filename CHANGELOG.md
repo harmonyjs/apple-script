@@ -6,6 +6,8 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+## [0.2.1] - 2025-09-07
+
 ### Fixed
 - **TypeScript Types**: Fixed loose typing in `schemas` export that required users to disable ESLint's `no-unsafe-*` rules. The `asRecord` function now returns a properly typed `z.ZodObject` instead of `z.ZodTypeAny`, preserving full type information. This allows consumers to use `schemas.record()` without TypeScript/ESLint warnings about unsafe operations.
 
@@ -50,6 +52,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - API Extractor setup and generated API docs pipeline
 - Comprehensive unit tests and an E2E example test
 
-[Unreleased]: https://github.com/harmonyjs/apple-script/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/harmonyjs/apple-script/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/harmonyjs/apple-script/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/harmonyjs/apple-script/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/harmonyjs/apple-script/compare/v0.0.4...v0.1.0
