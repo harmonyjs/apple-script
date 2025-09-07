@@ -6,6 +6,8 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-09-07
+
 ### Added
 - **Processing Pipeline**: New step-based processing pipeline with focused responsibilities (`src/runner/pipeline/processing-pipeline.ts`).
 
@@ -45,6 +47,6 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - API Extractor setup and generated API docs pipeline
 - Comprehensive unit tests and an E2E example test
 
-[Unreleased]: https://github.com/harmonyjs/apple-script/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/harmonyjs/apple-script/compare/v0.1.0...v1.0.0
+[Unreleased]: https://github.com/harmonyjs/apple-script/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/harmonyjs/apple-script/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/harmonyjs/apple-script/compare/v0.0.4...v0.1.0
