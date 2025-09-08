@@ -86,6 +86,17 @@ export const asBounds = asTuple([
 /**
  * Wraps a Zod object shape, replacing number/boolean fields with AppleScript-aware coercers.
  * Other field types are kept as-is.
+ * 
+ * Returns a strict object by default - unknown keys will cause validation to fail.
+ * This is intentional for AppleScript contexts where extra keys typically indicate bugs.
+ * 
+ * If you need to allow unknown keys, you can explicitly call `.strip()` or `.passthrough()` 
+ * on the returned schema:
+ * ```ts
+ * const schema = asRecord({ ... }).strip(); // removes unknown keys
+ * const schema = asRecord({ ... }).passthrough(); // keeps unknown keys
+ * ```
+ * 
  * @public
  */
 export function asRecord<T extends z.ZodRawShape>(
@@ -105,7 +116,7 @@ export function asRecord<T extends z.ZodRawShape>(
     else if (ctor === "ZodBoolean") newShape[key] = asBoolean;
     else newShape[key] = schema as z.ZodTypeAny;
   }
-  return z.object(newShape) as z.ZodObject<{
+  return z.object(newShape).strict() as z.ZodObject<{
     [K in keyof T]: T[K] extends z.ZodNumber
       ? typeof asNumber
       : T[K] extends z.ZodBoolean

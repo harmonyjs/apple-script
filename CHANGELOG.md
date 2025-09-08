@@ -6,6 +6,21 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+### Changed
+- `schemas.record()` (aka `asRecord()`) now returns a **strict** Zod object by default, rejecting unknown keys to improve safety in AppleScript contexts where extra keys typically indicate bugs or schema drift.
+  - **Migration**: If you rely on the previous behavior of stripping unknown keys, explicitly call `.strip()` on the returned schema:
+    ```ts
+    // Before (implicit strip):
+    const schema = as.record({ id: z.string(), active: as.boolean });
+    
+    // After (explicit strip if needed):
+    const schema = as.record({ id: z.string(), active: as.boolean }).strip();
+    
+    // Or use .passthrough() to keep unknown keys:
+    const schema = as.record({ id: z.string(), active: as.boolean }).passthrough();
+    ```
+  - **Rationale**: In AppleScript rows pipelines, columns are declared or inferred. Extra data typically signals a mapping bug or drifting script. Strict mode turns such drift into immediate, clear validation errors.
+
 ## [0.2.1] - 2025-09-07
 
 ### Fixed

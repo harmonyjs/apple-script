@@ -202,6 +202,7 @@ const listTabs = operation.rows({
   name: 'listTabs',
   columns: ['id', 'url', 'title', 'active', 'bounds', 'indices'],
   // as.record wraps number/boolean fields to accept AppleScript string representations
+  // and enforces strict validation by default (unknown keys are rejected)
   // You may also use explicit helpers like as.boolean/as.number
   output: z.array(as.record({
     id: z.string(),
@@ -337,7 +338,7 @@ The library ships Zod helpers tailored for AppleScript string outputs. They can 
 - `asArray(item)` — accepts array or list string ("{...}" or CSV)
 - `asTuple([...items])` — accepts tuple or list string with fixed length
 - `asBounds` — shorthand for `[x, y, width, height]` using `asNumber`
-- `asRecord(shape)` — wraps boolean/number fields in a shape with `asBoolean`/`asNumber`
+- `asRecord(shape)` — wraps boolean/number fields in a shape with `asBoolean`/`asNumber` and **enforces strict validation by default** (unknown keys cause validation errors)
 
 Import from the root entrypoint:
 
@@ -353,7 +354,7 @@ Examples:
 import { z } from 'zod';
 import { schemas as as } from '@avavilov/apple-script';
 
-// A single row item
+// A single row item - strict by default (rejects unknown keys)
 const Tab = as.record({
   id: z.string(),
   title: z.string(),
@@ -361,6 +362,10 @@ const Tab = as.record({
   zoom: as.number,           // "125" → 125
   bounds: as.bounds          // "{0, 0, 800, 600}" → [0,0,800,600]
 });
+
+// If you need to allow unknown keys:
+const TabWithExtra = as.record({ ... }).strip();     // removes unknown keys
+const TabPassthrough = as.record({ ... }).passthrough(); // keeps unknown keys
 
 // Whole rows output
 const TabsOutput = z.array(Tab);

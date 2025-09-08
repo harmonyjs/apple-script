@@ -56,3 +56,37 @@ void test("asRecord: wraps number/boolean fields with coercers", () => {
   const out = rec.parse({ id: "7", active: "0", title: "Hello" });
   assert.deepEqual(out, { id: 7, active: false, title: "Hello" });
 });
+
+void test("asRecord: is strict by default - rejects unknown keys", () => {
+  const rec = asRecord({
+    id: z.number(),
+    active: z.boolean(),
+    title: z.string(),
+  });
+  
+  // Should throw on unknown keys
+  assert.throws(() => {
+    rec.parse({ id: "7", active: "0", title: "Hello", extra: "unknown" });
+  }, {
+    name: "ZodError",
+    message: /unrecognized key/i,
+  });
+});
+
+void test("asRecord: can be made non-strict with .strip() or .passthrough()", () => {
+  const rec = asRecord({
+    id: z.number(),
+    active: z.boolean(),
+    title: z.string(),
+  });
+  
+  // Using .strip() removes unknown keys
+  const stripped = rec.strip();
+  const outStripped = stripped.parse({ id: "7", active: "0", title: "Hello", extra: "unknown" });
+  assert.deepEqual(outStripped, { id: 7, active: false, title: "Hello" });
+  
+  // Using .passthrough() keeps unknown keys
+  const passthrough = rec.passthrough();
+  const outPassthrough = passthrough.parse({ id: "7", active: "0", title: "Hello", extra: "unknown" });
+  assert.deepEqual(outPassthrough, { id: 7, active: false, title: "Hello", extra: "unknown" });
+});
