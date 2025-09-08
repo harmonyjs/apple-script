@@ -6,6 +6,9 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+
+## [0.3.0] - 2025-09-08
+
 ### Changed
 - `schemas.record()` (aka `asRecord()`) now returns a **strict** Zod object by default, rejecting unknown keys to improve safety in AppleScript contexts where extra keys typically indicate bugs or schema drift.
   - **Migration**: If you rely on the previous behavior of stripping unknown keys, explicitly call `.strip()` on the returned schema:
@@ -67,7 +70,8 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - API Extractor setup and generated API docs pipeline
 - Comprehensive unit tests and an E2E example test
 
-[Unreleased]: https://github.com/harmonyjs/apple-script/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/harmonyjs/apple-script/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/harmonyjs/apple-script/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/harmonyjs/apple-script/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/harmonyjs/apple-script/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/harmonyjs/apple-script/compare/v0.0.4...v0.1.0
